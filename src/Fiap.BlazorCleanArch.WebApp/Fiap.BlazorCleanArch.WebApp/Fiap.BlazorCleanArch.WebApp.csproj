@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>aspnet-Fiap_BlazorCleanArch_WebApp-77bd3b2a-34d2-4012-a7fe-fd19bb953057</UserSecretsId>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Fiap.BlazorCleanArch.Aplicacao\Fiap.BlazorCleanArch.Aplicacao.csproj" />
+    <ProjectReference Include="..\..\Fiap.BlazorCleanArch.Dominio\Fiap.BlazorCleanArch.Dominio.csproj" />
+    <ProjectReference Include="..\..\Fiap.BlazorCleanArch.Infra\Fiap.BlazorCleanArch.Infra.csproj" />
+    <ProjectReference Include="..\Fiap.BlazorCleanArch.WebApp.Client\Fiap.BlazorCleanArch.WebApp.Client.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
+  </ItemGroup>
+
+</Project>
