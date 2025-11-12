@@ -1,7 +1,536 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
 
-<PageTitle>Home</PageTitle>
+<style>
+    article.px-4 {
+        padding: 0 !important;
+    }
 
-<h1>Hello, world!</h1>
+    .home-page {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        background: #0a0a0a;
+    }
 
-Welcome to your new app.
+    .hero-section {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1f1f1f 100%);
+        min-height: 400px;
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(96, 165, 250, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+        }
+
+    .text-gradient {
+        background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .hero-image {
+        text-align: center;
+        animation: float 3s ease-in-out infinite;
+        position: relative;
+        z-index: 1;
+    }
+
+        .hero-image i {
+            font-size: 15rem;
+            background: linear-gradient(135deg, rgba(96, 165, 250, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+    @@keyframes float {
+        0%, 100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-20px);
+        }
+    }
+
+    .home-content {
+        background: linear-gradient(180deg, rgba(45, 45, 45, 0.3) 0%, #0a0a0a 20%);
+        min-height: calc(100vh - 400px);
+        width: 100%;
+    }
+
+    .recent-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: rgba(30, 30, 30, 0.6) !important;
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+        .recent-card:hover {
+            background: rgba(45, 45, 45, 0.8) !important;
+            border-color: rgba(96, 165, 250, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+        }
+
+            .recent-card:hover .play-overlay {
+                opacity: 1;
+                transform: translateX(0);
+            }
+
+    .recent-thumb {
+        width: 64px;
+        height: 64px;
+        object-fit: cover;
+    }
+
+    .play-overlay {
+        position: absolute;
+        right: 10px;
+        opacity: 0;
+        transform: translateX(10px);
+        transition: all 0.3s ease;
+    }
+
+        .play-overlay button {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+        }
+
+            .play-overlay button i {
+                margin-left: 2px;
+            }
+
+    .playlist-card, .artist-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: rgba(30, 30, 30, 0.6) !important;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+        .playlist-card:hover, .artist-card:hover {
+            background: rgba(45, 45, 45, 0.8) !important;
+            transform: translateY(-8px);
+            border-color: rgba(96, 165, 250, 0.3);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
+        }
+
+            .playlist-card:hover .play-button, .artist-card:hover .play-button {
+                opacity: 1 !important;
+                transform: translateY(-4px);
+            }
+
+    .playlist-cover, .artist-image {
+        aspect-ratio: 1;
+        overflow: hidden;
+        position: relative;
+    }
+
+        .playlist-cover img, .artist-image img {
+            object-fit: cover;
+            width: 100%;
+            height: 100%;
+        }
+
+    .play-button {
+        transition: all 0.3s ease;
+    }
+
+        .play-button button {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(96, 165, 250, 0.4);
+        }
+
+            .play-button button:hover {
+                transform: scale(1.1);
+                box-shadow: 0 6px 16px rgba(96, 165, 250, 0.6);
+            }
+
+            .play-button button i {
+                margin-left: 2px;
+            }
+
+    .playlist-description {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .feature-card {
+        background: rgba(30, 30, 30, 0.6) !important;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(96, 165, 250, 0.3);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
+        }
+
+    .feature-icon i {
+        font-size: 3rem;
+        background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .text-white-50 {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .bg-body-secondary {
+        background-color: rgba(30, 30, 30, 0.6);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+        border: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
+    }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(96, 165, 250, 0.5);
+        }
+
+    .btn-outline-light {
+        border-color: rgba(255, 255, 255, 0.3);
+        color: white;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+        .btn-outline-light:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: scale(1.05);
+            color: white;
+        }
+
+    .btn-success {
+        background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+        border: none;
+        box-shadow: 0 4px 12px rgba(96, 165, 250, 0.4);
+    }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            box-shadow: 0 6px 16px rgba(96, 165, 250, 0.6);
+        }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 0;
+    }
+
+    .section-link {
+        font-size: 0.875rem;
+        color: rgba(255, 255, 255, 0.6);
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+        .section-link:hover {
+            color: #60a5fa;
+            text-decoration: none;
+        }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
+</style>
+
+<PageTitle>Fiapfy - Música para todos</PageTitle>
+
+<div class="home-page">
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container-fluid px-5 py-5 hero-content">
+            <AuthorizeView>
+                <Authorized>
+                    <div class="row align-items-center">
+                        <div class="col-lg-8">
+                            <h1 class="display-2 fw-bold text-white mb-4">
+                                Bem-vindo de volta, <span class="text-gradient">@GetPrimeiroNome(context.User.Identity?.Name)</span>
+                            </h1>
+                            <p class="lead mb-4" style="color: rgba(255, 255, 255, 0.8);">
+                                Continue ouvindo suas músicas favoritas de onde parou
+                            </p>
+                        </div>
+                    </div>
+                </Authorized>
+                <NotAuthorized>
+                    <div class="row align-items-center">
+                        <div class="col-lg-6">
+                            <h1 class="display-1 fw-bold text-white mb-4">
+                                Milhões de músicas.<br />
+                                <span class="text-gradient">Grátis no Fiapfy.</span>
+                            </h1>
+                            <p class="lead mb-4" style="color: rgba(255, 255, 255, 0.8);">
+                                Crie playlists, descubra novos artistas e ouça suas músicas favoritas
+                            </p>
+                            <div class="d-flex gap-3 flex-wrap">
+                                <a href="Account/Register" class="btn btn-primary btn-lg rounded-pill px-5 fw-semibold">
+                                    <i class="bi bi-person-plus me-2"></i>Criar Conta Grátis
+                                </a>
+                                <a href="Account/Login" class="btn btn-outline-light btn-lg rounded-pill px-5 fw-semibold">
+                                    Entrar
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 d-none d-lg-block">
+                            <div class="hero-image">
+                                <i class="bi bi-music-note-beamed"></i>
+                            </div>
+                        </div>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="home-content">
+        <div class="container-fluid px-5 py-5">
+            <AuthorizeView>
+                <Authorized>
+                    <!-- Tocadas Recentemente -->
+                    <section class="mb-5">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2 class="section-title">Tocadas recentemente</h2>
+                            <a href="#" class="section-link">Ver todas</a>
+                        </div>
+                        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+                            @foreach (var item in recentementeOuvidas)
+                            {
+                                <div class="col">
+                                    <div class="recent-card bg-body-secondary rounded-3 p-2 d-flex align-items-center"
+                                         @onclick="() => PlayItem(item)">
+                                        <img src="@item.ImageUrl" alt="@item.Nome" class="recent-thumb rounded me-3" />
+                                        <span class="text-white fw-semibold flex-grow-1 text-truncate">@item.Nome</span>
+                                        <div class="play-overlay">
+                                            <button class="btn btn-success rounded-circle shadow">
+                                                <i class="bi bi-play-fill"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </section>
+                </Authorized>
+                <NotAuthorized>
+                    <!-- Recursos para não autenticados -->
+                    <section class="mb-5">
+                        <h2 class="section-title text-center mb-5">Por que escolher o Fiapfy?</h2>
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <div class="feature-card bg-body-secondary rounded-3 p-4 text-center h-100">
+                                    <div class="feature-icon mb-3">
+                                        <i class="bi bi-music-note-list"></i>
+                                    </div>
+                                    <h3 class="h5 text-white mb-3 fw-bold">Milhões de músicas</h3>
+                                    <p class="text-white-50 mb-0">
+                                        Acesso ilimitado a um catálogo enorme de músicas de todos os gêneros
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="feature-card bg-body-secondary rounded-3 p-4 text-center h-100">
+                                    <div class="feature-icon mb-3">
+                                        <i class="bi bi-collection-play"></i>
+                                    </div>
+                                    <h3 class="h5 text-white mb-3 fw-bold">Playlists personalizadas</h3>
+                                    <p class="text-white-50 mb-0">
+                                        Crie e compartilhe suas próprias playlists com amigos
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="feature-card bg-body-secondary rounded-3 p-4 text-center h-100">
+                                    <div class="feature-icon mb-3">
+                                        <i class="bi bi-phone"></i>
+                                    </div>
+                                    <h3 class="h5 text-white mb-3 fw-bold">Ouça em qualquer lugar</h3>
+                                    <p class="text-white-50 mb-0">
+                                        Disponível em todos os seus dispositivos favoritos
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </NotAuthorized>
+            </AuthorizeView>
+
+            <!-- Top Artistas -->
+            <section class="mb-5">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="section-title">Artistas populares</h2>
+                    <a href="#" class="section-link">Ver todos</a>
+                </div>
+                <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-6 g-4">
+                    @foreach (var artista in artistasPopulares)
+                    {
+                        <div class="col">
+                            <div class="artist-card bg-body-secondary rounded-3 p-3 text-center h-100">
+                                <div class="artist-image mb-3 position-relative">
+                                    <img src="@artista.ImageUrl" alt="@artista.Nome" class="w-100 rounded-circle shadow" />
+                                    <div class="play-button position-absolute bottom-0 end-0 m-2 opacity-0">
+                                        <button class="btn btn-success rounded-circle shadow">
+                                            <i class="bi bi-play-fill"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <h3 class="h6 text-white fw-semibold mb-1 text-truncate">@artista.Nome</h3>
+                                <p class="small text-white-50 mb-0">Artista</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <!-- Playlists em Destaque -->
+            <section class="mb-5">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="section-title">Playlists em destaque</h2>
+                    <a href="#" class="section-link">Ver todas</a>
+                </div>
+                <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-6 g-4">
+                    @foreach (var playlist in playlistsDestaque)
+                    {
+                        <div class="col">
+                            <div class="playlist-card bg-body-secondary rounded-3 p-3 h-100">
+                                <div class="playlist-cover mb-3 position-relative">
+                                    <img src="@playlist.ImageUrl" alt="@playlist.Nome" class="w-100 rounded-2 shadow" />
+                                    <div class="play-button position-absolute bottom-0 end-0 m-2 opacity-0">
+                                        <button class="btn btn-success rounded-circle shadow">
+                                            <i class="bi bi-play-fill"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <h3 class="h6 text-white fw-semibold mb-2 text-truncate">@playlist.Nome</h3>
+                                <p class="small text-white-50 mb-0 playlist-description">@playlist.Descricao</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<RecentItemModel> recentementeOuvidas = new();
+    private List<PlaylistModel> playlistsDestaque = new();
+    private List<ArtistaModel> artistasPopulares = new();
+
+    protected override void OnInitialized()
+    {
+        CarregarDados();
+    }
+
+    private void CarregarDados()
+    {
+        recentementeOuvidas = new List<RecentItemModel>
+        {
+            new() { Id = "1", Nome = "Rock Clássico", ImageUrl = "https://picsum.photos/64/64?random=1" },
+            new() { Id = "2", Nome = "Jazz Instrumental", ImageUrl = "https://picsum.photos/64/64?random=2" },
+            new() { Id = "3", Nome = "Músicas Favoritas", ImageUrl = "https://picsum.photos/64/64?random=3" },
+            new() { Id = "4", Nome = "Workout Mix", ImageUrl = "https://picsum.photos/64/64?random=4" },
+            new() { Id = "5", Nome = "Chill Vibes", ImageUrl = "https://picsum.photos/64/64?random=5" },
+            new() { Id = "6", Nome = "Top Hits 2024", ImageUrl = "https://picsum.photos/64/64?random=6" },
+        };
+
+        playlistsDestaque = new List<PlaylistModel>
+        {
+            new() { Id = 10, Nome = "Today's Top Hits", Descricao = "Os maiores sucessos do momento", ImageUrl = "https://picsum.photos/300/300?random=21" },
+            new() { Id = 11, Nome = "RapCaviar", Descricao = "Rap e Hip Hop", ImageUrl = "https://picsum.photos/300/300?random=22" },
+            new() { Id = 12, Nome = "All Out 80s", Descricao = "Os clássicos dos anos 80", ImageUrl = "https://picsum.photos/300/300?random=23" },
+            new() { Id = 13, Nome = "Peaceful Piano", Descricao = "Piano relaxante", ImageUrl = "https://picsum.photos/300/300?random=24" },
+            new() { Id = 14, Nome = "Rock Legends", Descricao = "Lendas do rock", ImageUrl = "https://picsum.photos/300/300?random=25" },
+            new() { Id = 15, Nome = "Latin Hits", Descricao = "Sucessos latinos", ImageUrl = "https://picsum.photos/300/300?random=26" },
+        };
+
+        artistasPopulares = new List<ArtistaModel>
+        {
+            new() { Id = "1", Nome = "The Beatles", ImageUrl = "https://cdn-images.dzcdn.net/images/artist/fe9eb4463ea87452e84ed97e0c86b878/1900x1900-000000-80-0-0.jpg" },
+            new() { Id = "2", Nome = "Lady Gaga", ImageUrl = "https://i.scdn.co/image/ab6761610000e5ebaadc18cac8d48124357c38e6" },
+            new() { Id = "3", Nome = "Linkin Park", ImageUrl = "https://upload.wikimedia.org/wikipedia/commons/d/d8/Linkin_Park_-_From_Zero_Lead_Press_Photo_-_James_Minchin_III.jpg" },
+            new() { Id = "4", Nome = "Tears for Fears", ImageUrl = "https://i.scdn.co/image/ab676161000051741e63dea1bded4ae1d53b5c9a" },
+            new() { Id = "5", Nome = "Avenged Sevenfold", ImageUrl = "https://fitademo.com.br/wp-content/uploads/2025/09/A7x.png" },
+            new() { Id = "6", Nome = "Metallica", ImageUrl = "https://i.scdn.co/image/ab6761610000e5eb69ca98dd3083f1082d740e44" },
+        };
+    }
+
+    private string GetPrimeiroNome(string? nomeCompleto)
+    {
+        if (string.IsNullOrWhiteSpace(nomeCompleto))
+            return "Usuário";
+
+        var partes = nomeCompleto.Split('@');
+        return partes[0];
+    }
+
+    private void PlayItem(RecentItemModel item)
+    {
+        Console.WriteLine($"Tocando: {item.Nome}");
+    }
+
+    private class RecentItemModel
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Nome { get; set; } = string.Empty;
+        public string ImageUrl { get; set; } = string.Empty;
+    }
+
+    private class PlaylistModel
+    {
+        public int Id { get; set; }
+        public string Nome { get; set; } = string.Empty;
+        public string Descricao { get; set; } = string.Empty;
+        public string ImageUrl { get; set; } = string.Empty;
+    }
+
+    private class ArtistaModel
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Nome { get; set; } = string.Empty;
+        public string ImageUrl { get; set; } = string.Empty;
+    }
+}

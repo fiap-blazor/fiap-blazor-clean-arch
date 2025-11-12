@@ -1,0 +1,564 @@
+﻿@page "/biblioteca"
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@rendermode InteractiveServer
+
+<style>
+    article.px-4 {
+        padding: 0 !important;
+    }
+
+    .library-page {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        background: #0a0a0a;
+    }
+
+    .library-header {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1f1f1f 100%);
+        min-height: 340px;
+        display: flex;
+        align-items: flex-end;
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .library-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(96, 165, 250, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
+        }
+
+    .profile-image {
+        width: 232px;
+        height: 232px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    .library-content {
+        background: linear-gradient(180deg, rgba(45, 45, 45, 0.3) 0%, #0a0a0a 20%);
+        min-height: calc(100vh - 340px);
+        width: 100%;
+    }
+
+    .create-playlist-card {
+        background: linear-gradient(135deg, rgba(96, 165, 250, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+        border: 2px dashed rgba(96, 165, 250, 0.4);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-height: 280px;
+    }
+
+        .create-playlist-card:hover {
+            background: linear-gradient(135deg, rgba(96, 165, 250, 0.25) 0%, rgba(139, 92, 246, 0.25) 100%);
+            border-color: rgba(96, 165, 250, 0.6);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(96, 165, 250, 0.2);
+        }
+
+    .create-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        transition: transform 0.3s ease;
+    }
+
+    .create-playlist-card:hover .create-icon {
+        transform: scale(1.1);
+    }
+
+    .create-icon i {
+        font-size: 2.5rem;
+        color: white;
+    }
+
+    .playlist-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: rgba(30, 30, 30, 0.6) !important;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        min-height: 280px;
+    }
+
+        .playlist-card:hover {
+            background: rgba(45, 45, 45, 0.8) !important;
+            transform: translateY(-8px);
+            border-color: rgba(96, 165, 250, 0.3);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
+        }
+
+            .playlist-card:hover .play-button {
+                opacity: 1 !important;
+                transform: translateY(-4px);
+            }
+
+    .playlist-cover {
+        aspect-ratio: 1;
+        overflow: hidden;
+        position: relative;
+        background: linear-gradient(135deg, rgba(96, 165, 250, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+    }
+
+        .playlist-cover img {
+            object-fit: cover;
+            width: 100%;
+            height: 100%;
+        }
+
+        .playlist-cover .placeholder-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+    .play-button {
+        transition: all 0.3s ease;
+    }
+
+        .play-button button {
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(96, 165, 250, 0.4);
+        }
+
+            .play-button button:hover {
+                transform: scale(1.1);
+                box-shadow: 0 6px 16px rgba(96, 165, 250, 0.6);
+            }
+
+            .play-button button i {
+                margin-left: 3px;
+                font-size: 1.5rem;
+            }
+
+    .playlist-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        flex: 1;
+    }
+
+    .playlist-stats {
+        font-size: 0.875rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .filter-tabs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .filter-tab {
+        padding: 0.75rem 1.5rem;
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.6);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border-bottom: 2px solid transparent;
+        font-weight: 600;
+    }
+
+        .filter-tab:hover {
+            color: white;
+        }
+
+        .filter-tab.active {
+            color: white;
+            border-bottom-color: #60a5fa;
+        }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+
+        .empty-state i {
+            font-size: 5rem;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1.5rem;
+        }
+
+        .empty-state h3 {
+            color: white;
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .empty-state p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1rem;
+        }
+
+    .btn-create-playlist {
+        background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+        border: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
+    }
+
+        .btn-create-playlist:hover {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(96, 165, 250, 0.5);
+        }
+
+    .modal-dark {
+        background-color: rgba(10, 10, 10, 0.95);
+    }
+
+        .modal-dark .modal-content {
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .modal-dark .modal-header {
+            border-bottom-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-dark .modal-footer {
+            border-top-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-dark .form-control,
+        .modal-dark .form-select {
+            background-color: rgba(45, 45, 45, 0.8);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+            .modal-dark .form-control:focus,
+            .modal-dark .form-select:focus {
+                background-color: rgba(45, 45, 45, 0.9);
+                border-color: rgba(96, 165, 250, 0.5);
+                color: white;
+                box-shadow: 0 0 0 0.25rem rgba(96, 165, 250, 0.15);
+            }
+
+            .modal-dark .form-control::placeholder {
+                color: rgba(255, 255, 255, 0.4);
+            }
+
+        .modal-dark .form-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+        }
+
+        .modal-dark .btn-close {
+            filter: invert(1);
+        }
+
+    .text-white-50 {
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .header-content {
+        position: relative;
+        z-index: 1;
+    }
+</style>
+
+<PageTitle>Minha Biblioteca - Fiapfy</PageTitle>
+
+<div class="library-page">
+    <!-- Header estilo Spotify -->
+    <div class="library-header">
+        <div class="container-fluid px-5 py-5 header-content">
+            <AuthorizeView>
+                <Authorized>
+                    <div class="row align-items-end">
+                        <div class="col-auto">
+                            <img src="@ObterAvatarUrl(context.User.Identity?.Name)"
+                                 class="profile-image"
+                                 alt="Foto do perfil" />
+                        </div>
+                        <div class="col">
+                            <p class="text-white-50 mb-2 small text-uppercase fw-semibold">Biblioteca</p>
+                            <h1 class="display-3 fw-bold text-white mb-3">@ObterNomeUsuario(context.User.Identity?.Name)</h1>
+                            <p class="text-white-50 mb-0">
+                                <span class="fw-semibold">@playlists.Count(p => p.CriadaPorMim)</span> playlists criadas •
+                                <span class="fw-semibold">@playlists.Count</span> total
+                            </p>
+                        </div>
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+        </div>
+    </div>
+
+    <!-- Conteúdo principal -->
+    <div class="library-content">
+        <div class="container-fluid px-5 py-4">
+            <!-- Filter Tabs -->
+            <div class="filter-tabs">
+                <button class="filter-tab @(filtroAtivo == "todas" ? "active" : "")" @onclick='() => FiltrarPlaylists("todas")'>
+                    Todas
+                </button>
+                <button class="filter-tab @(filtroAtivo == "criadas" ? "active" : "")" @onclick='() => FiltrarPlaylists("criadas")'>
+                    Criadas por mim
+                </button>
+                <button class="filter-tab @(filtroAtivo == "seguidas" ? "active" : "")" @onclick='() => FiltrarPlaylists("seguidas")'>
+                    Seguindo
+                </button>
+            </div>
+
+            @if (playlistsFiltradas.Any())
+            {
+                <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-6 g-4">
+                    <!-- Card de Criar Nova Playlist -->
+                    <div class="col">
+                        <div class="create-playlist-card rounded-3 p-4 d-flex flex-column align-items-center justify-content-center h-100"
+                             @onclick="AbrirModalCriarPlaylist">
+                            <div class="create-icon">
+                                <i class="bi bi-plus-lg"></i>
+                            </div>
+                            <h3 class="h5 text-white fw-bold mb-2">Criar Playlist</h3>
+                            <p class="small text-white-50 mb-0 text-center">Crie uma nova coleção de músicas</p>
+                        </div>
+                    </div>
+
+                    <!-- Playlists do Usuário -->
+                    @foreach (var playlist in playlistsFiltradas)
+                    {
+                        <div class="col">
+                            <div class="playlist-card rounded-3 p-3 h-100 d-flex flex-column"
+                                 @onclick="() => AbrirPlaylist(playlist.Id)">
+                                <div class="playlist-cover mb-3 position-relative rounded-2">
+                                    @if (!string.IsNullOrEmpty(playlist.ImageUrl))
+                                    {
+                                        <img src="@playlist.ImageUrl" alt="@playlist.Nome" />
+                                    }
+                                    else
+                                    {
+                                        <div class="placeholder-icon">
+                                            <i class="bi bi-music-note-list"></i>
+                                        </div>
+                                    }
+                                    <div class="play-button position-absolute bottom-0 end-0 m-3 opacity-0">
+                                        <button class="btn rounded-circle shadow">
+                                            <i class="bi bi-play-fill"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="playlist-info">
+                                    <div>
+                                        <h3 class="h6 text-white fw-semibold mb-1 text-truncate">@playlist.Nome</h3>
+                                        <p class="small text-white-50 mb-2">@playlist.CriadoPor</p>
+                                    </div>
+                                    <div class="playlist-stats">
+                                        <i class="bi bi-music-note me-1"></i> @playlist.TotalMusicas músicas
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="bi bi-music-note-list d-block"></i>
+                    <h3>Nenhuma playlist encontrada</h3>
+                    <p class="mb-4">Comece criando sua primeira playlist!</p>
+                    <button class="btn btn-create-playlist btn-lg rounded-pill px-5 fw-semibold"
+                            @onclick="AbrirModalCriarPlaylist">
+                        <i class="bi bi-plus-lg me-2"></i>Criar Playlist
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal Criar Playlist -->
+@if (mostrarModal)
+{
+    <div class="modal fade show d-block modal-dark" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.8);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Criar Nova Playlist</h5>
+                    <button type="button" class="btn-close" @onclick="FecharModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="playlistName" class="form-label">Nome da Playlist</label>
+                        <input type="text" class="form-control" id="playlistName"
+                               @bind="novaPlaylist.Nome"
+                               placeholder="Minha Playlist Incrível" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="playlistDescription" class="form-label">Descrição (opcional)</label>
+                        <textarea class="form-control" id="playlistDescription"
+                                  @bind="novaPlaylist.Descricao"
+                                  rows="3"
+                                  placeholder="Adicione uma descrição..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="playlistPrivacy" class="form-label">Privacidade</label>
+                        <select class="form-select" id="playlistPrivacy" @bind="novaPlaylist.Publica">
+                            <option value="true">Pública - Qualquer pessoa pode ver</option>
+                            <option value="false">Privada - Apenas você pode ver</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="FecharModal">Cancelar</button>
+                    <button type="button" class="btn btn-create-playlist" @onclick="CriarPlaylist">
+                        <i class="bi bi-plus-lg me-2"></i>Criar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<PlaylistModel> playlists = new();
+    private List<PlaylistModel> playlistsFiltradas = new();
+    private string filtroAtivo = "todas";
+    private bool mostrarModal = false;
+    private NovaPlaylistModel novaPlaylist = new();
+
+    protected override void OnInitialized()
+    {
+        CarregarPlaylists();
+        FiltrarPlaylists("todas");
+    }
+
+    private void CarregarPlaylists()
+    {
+        // TODO: Carregar do backend
+        playlists = new List<PlaylistModel>
+        {
+            new() { Id = 1, Nome = "Músicas Favoritas", CriadoPor = "Você", TotalMusicas = 42, ImageUrl = "https://picsum.photos/300/300?random=1", CriadaPorMim = true },
+            new() { Id = 2, Nome = "Rock Clássico", CriadoPor = "Você", TotalMusicas = 28, ImageUrl = "https://picsum.photos/300/300?random=2", CriadaPorMim = true },
+            new() { Id = 3, Nome = "Chill Vibes", CriadoPor = "Você", TotalMusicas = 35, ImageUrl = "https://picsum.photos/300/300?random=3", CriadaPorMim = true },
+            new() { Id = 4, Nome = "Workout Mix", CriadoPor = "Você", TotalMusicas = 20, ImageUrl = "", CriadaPorMim = true },
+            new() { Id = 5, Nome = "Top Hits 2024", CriadoPor = "Fiapfy", TotalMusicas = 50, ImageUrl = "https://picsum.photos/300/300?random=5", CriadaPorMim = false },
+            new() { Id = 6, Nome = "Jazz & Blues", CriadoPor = "Jazz Masters", TotalMusicas = 45, ImageUrl = "https://picsum.photos/300/300?random=6", CriadaPorMim = false },
+        };
+    }
+
+    private void FiltrarPlaylists(string filtro)
+    {
+        filtroAtivo = filtro;
+        playlistsFiltradas = filtro switch
+        {
+            "criadas" => playlists.Where(p => p.CriadaPorMim).ToList(),
+            "seguidas" => playlists.Where(p => !p.CriadaPorMim).ToList(),
+            _ => playlists.ToList()
+        };
+    }
+
+    private void AbrirModalCriarPlaylist()
+    {
+        novaPlaylist = new NovaPlaylistModel();
+        mostrarModal = true;
+    }
+
+    private void FecharModal()
+    {
+        mostrarModal = false;
+        novaPlaylist = new NovaPlaylistModel();
+    }
+
+    private void CriarPlaylist()
+    {
+        if (string.IsNullOrWhiteSpace(novaPlaylist.Nome))
+        {
+            return;
+        }
+
+        // TODO: Salvar no backend
+        var playlist = new PlaylistModel
+        {
+            Id = playlists.Max(p => p.Id) + 1,
+            Nome = novaPlaylist.Nome,
+            CriadoPor = "Você",
+            TotalMusicas = 0,
+            ImageUrl = "",
+            CriadaPorMim = true
+        };
+
+        playlists.Insert(0, playlist);
+        FiltrarPlaylists(filtroAtivo);
+        FecharModal();
+    }
+
+    private void AbrirPlaylist(int playlistId)
+    {
+        NavigationManager.NavigateTo($"/playlist/{playlistId}");
+    }
+
+    private string ObterAvatarUrl(string? email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return "https://ui-avatars.com/api/?name=Usuario&size=400&background=60a5fa&color=fff";
+
+        var emailLimpo = email.Split('@')[0];
+        return $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(emailLimpo)}&size=400&background=60a5fa&color=fff&bold=true";
+    }
+
+    private string ObterNomeUsuario(string? nomeCompleto)
+    {
+        if (string.IsNullOrWhiteSpace(nomeCompleto))
+            return "Minha Biblioteca";
+
+        var partes = nomeCompleto.Split('@');
+        return partes[0];
+    }
+
+    private class PlaylistModel
+    {
+        public int Id { get; set; }
+        public string Nome { get; set; } = string.Empty;
+        public string CriadoPor { get; set; } = string.Empty;
+        public int TotalMusicas { get; set; }
+        public string ImageUrl { get; set; } = string.Empty;
+        public bool CriadaPorMim { get; set; }
+    }
+
+    private class NovaPlaylistModel
+    {
+        public string Nome { get; set; } = string.Empty;
+        public string Descricao { get; set; } = string.Empty;
+        public bool Publica { get; set; } = true;
+    }
+}

@@ -1,0 +1,461 @@
+﻿@page "/playlist/nova"
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<style>
+    article.px-4 {
+        padding: 0 !important;
+    }
+
+    .create-playlist-page {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        background: #0a0a0a;
+        min-height: 100vh;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1f1f1f 100%);
+        min-height: 200px;
+        display: flex;
+        align-items: flex-end;
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(96, 165, 250, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
+        }
+
+    .header-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .page-content {
+        background: linear-gradient(180deg, rgba(45, 45, 45, 0.3) 0%, #0a0a0a 20%);
+        min-height: calc(100vh - 200px);
+        width: 100%;
+    }
+
+    .form-card {
+        background: rgba(30, 30, 30, 0.6);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 1rem;
+        padding: 2rem;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .cover-upload-area {
+        aspect-ratio: 1;
+        background: linear-gradient(135deg, rgba(96, 165, 250, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+        border: 2px dashed rgba(96, 165, 250, 0.4);
+        border-radius: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .cover-upload-area:hover {
+            background: linear-gradient(135deg, rgba(96, 165, 250, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%);
+            border-color: rgba(96, 165, 250, 0.6);
+        }
+
+        .cover-upload-area.has-image {
+            border-style: solid;
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .cover-upload-area img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .upload-placeholder {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        width: 100%;
+        padding: 2rem;
+    }
+
+        .upload-placeholder i {
+            font-size: 4rem;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+    .form-control,
+    .form-select {
+        background-color: rgba(45, 45, 45, 0.8);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: white;
+        transition: all 0.3s ease;
+    }
+
+        .form-control:focus,
+        .form-select:focus {
+            background-color: rgba(45, 45, 45, 0.9);
+            border-color: rgba(96, 165, 250, 0.5);
+            color: white;
+            box-shadow: 0 0 0 0.25rem rgba(96, 165, 250, 0.15);
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+    .form-label {
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+        border: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
+    }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(96, 165, 250, 0.5);
+        }
+
+    .btn-secondary {
+        background: rgba(45, 45, 45, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        transition: all 0.3s ease;
+    }
+
+        .btn-secondary:hover {
+            background: rgba(60, 60, 60, 0.9);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+    .text-white-50 {
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 0;
+    }
+
+    .info-text {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .character-count {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.75rem;
+        text-align: right;
+        margin-top: 0.25rem;
+    }
+
+        .character-count.limit-warning {
+            color: #fbbf24;
+        }
+
+        .character-count.limit-exceeded {
+            color: #ef4444;
+        }
+
+    .privacy-option {
+        background: rgba(45, 45, 45, 0.6);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.75rem;
+        padding: 1.25rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 1rem;
+    }
+
+        .privacy-option:hover {
+            background: rgba(60, 60, 60, 0.7);
+            border-color: rgba(96, 165, 250, 0.3);
+        }
+
+        .privacy-option.selected {
+            background: rgba(96, 165, 250, 0.15);
+            border-color: rgba(96, 165, 250, 0.6);
+        }
+
+        .privacy-option i {
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+    .back-button {
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: color 0.2s ease;
+    }
+
+        .back-button:hover {
+            color: white;
+        }
+</style>
+
+<PageTitle>Criar Playlist - Fiapfy</PageTitle>
+
+<div class="create-playlist-page">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="container-fluid px-5 py-4 header-content">
+            <a href="/biblioteca" class="back-button mb-3">
+                <i class="bi bi-arrow-left"></i>
+                <span>Voltar para Biblioteca</span>
+            </a>
+            <h1 class="section-title mb-2">Criar Nova Playlist</h1>
+            <p class="text-white-50">Personalize sua playlist com nome, descrição e capa</p>
+        </div>
+    </div>
+
+    <!-- Conteúdo -->
+    <div class="page-content">
+        <div class="container-fluid px-5 py-5">
+            <div class="form-card">
+                <EditForm Model="@novaPlaylist" OnValidSubmit="@SalvarPlaylist">
+                    <div class="row g-4">
+                        <!-- Coluna da Capa -->
+                        <div class="col-md-4">
+                            <label class="form-label">Imagem da Capa</label>
+                            <div class="cover-upload-area @(imagemPreview != null ? "has-image" : "")"
+                                 @onclick="SelecionarImagem">
+                                @if (imagemPreview != null)
+                                {
+                                    <img src="@imagemPreview" alt="Preview da capa" />
+                                    <div class="upload-placeholder" style="background: rgba(0,0,0,0.6);">
+                                        <i class="bi bi-camera-fill d-block"></i>
+                                        <p class="text-white mb-0 small">Clique para alterar</p>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="upload-placeholder">
+                                        <i class="bi bi-image d-block"></i>
+                                        <p class="text-white mb-2 fw-semibold">Adicionar capa</p>
+                                        <p class="text-white-50 mb-0 small">Clique para fazer upload</p>
+                                    </div>
+                                }
+                            </div>
+                            <InputFile OnChange="@CarregarImagem" class="d-none" id="fileInput" accept="image/*" />
+                            <p class="info-text mt-2">
+                                Recomendado: 300x300px ou maior, JPG ou PNG
+                            </p>
+                        </div>
+
+                        <!-- Coluna do Formulário -->
+                        <div class="col-md-8">
+                            <!-- Nome -->
+                            <div class="mb-4">
+                                <label for="nome" class="form-label">
+                                    Nome da Playlist <span class="text-danger">*</span>
+                                </label>
+                                <InputText id="nome"
+                                           class="form-control form-control-lg"
+                                           @bind-Value="novaPlaylist.Nome"
+                                           placeholder="Minha Playlist Incrível"
+                                           maxlength="100" />
+                                <div class="character-count @(novaPlaylist.Nome.Length > 80 ? "limit-warning" : "")">
+                                    @novaPlaylist.Nome.Length / 100
+                                </div>
+                            </div>
+
+                            <!-- Descrição -->
+                            <div class="mb-4">
+                                <label for="descricao" class="form-label">Descrição</label>
+                                <InputTextArea id="descricao"
+                                               class="form-control"
+                                               @bind-Value="novaPlaylist.Descricao"
+                                               placeholder="Adicione uma descrição opcional para sua playlist..."
+                                               rows="4"
+                                               maxlength="300" />
+                                <div class="character-count @(novaPlaylist.Descricao.Length > 250 ? "limit-warning" : "")">
+                                    @novaPlaylist.Descricao.Length / 300
+                                </div>
+                            </div>
+
+                            <!-- Privacidade -->
+                            <div class="mb-4">
+                                <label class="form-label d-block mb-3">Privacidade</label>
+                                
+                                <div class="privacy-option @(novaPlaylist.Publica ? "selected" : "")"
+                                     @onclick="() => novaPlaylist.Publica = true">
+                                    <div class="d-flex align-items-start">
+                                        <i class="bi bi-globe me-3 mt-1"></i>
+                                        <div class="flex-grow-1">
+                                            <h6 class="text-white mb-1 fw-semibold">Pública</h6>
+                                            <p class="text-white-50 mb-0 small">
+                                                Qualquer pessoa pode ver e seguir esta playlist
+                                            </p>
+                                        </div>
+                                        @if (novaPlaylist.Publica)
+                                        {
+                                            <i class="bi bi-check-circle-fill text-primary fs-5"></i>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="privacy-option @(!novaPlaylist.Publica ? "selected" : "")"
+                                     @onclick="() => novaPlaylist.Publica = false">
+                                    <div class="d-flex align-items-start">
+                                        <i class="bi bi-lock-fill me-3 mt-1"></i>
+                                        <div class="flex-grow-1">
+                                            <h6 class="text-white mb-1 fw-semibold">Privada</h6>
+                                            <p class="text-white-50 mb-0 small">
+                                                Apenas você pode ver e acessar esta playlist
+                                            </p>
+                                        </div>
+                                        @if (!novaPlaylist.Publica)
+                                        {
+                                            <i class="bi bi-check-circle-fill text-primary fs-5"></i>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Botões de Ação -->
+                            <div class="d-flex gap-3 mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg px-5 fw-semibold" disabled="@salvando">
+                                    @if (salvando)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                        <span>Criando...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-plus-circle me-2"></i>
+                                        <span>Criar Playlist</span>
+                                    }
+                                </button>
+                                <a href="/biblioteca" class="btn btn-secondary btn-lg px-5 fw-semibold">
+                                    Cancelar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private NovaPlaylistModel novaPlaylist = new();
+    private string? imagemPreview;
+    private bool salvando = false;
+
+    private async Task SalvarPlaylist()
+    {
+        if (string.IsNullOrWhiteSpace(novaPlaylist.Nome))
+        {
+            return;
+        }
+
+        salvando = true;
+
+        try
+        {
+            // TODO: Implementar salvamento no backend
+            await Task.Delay(1500); // Simula chamada API
+
+            // Redireciona para a biblioteca
+            NavigationManager.NavigateTo("/biblioteca");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Erro ao criar playlist: {ex.Message}");
+        }
+        finally
+        {
+            salvando = false;
+        }
+    }
+
+    private async Task SelecionarImagem()
+    {
+        // Trigger o input file via JavaScript
+        await Task.CompletedTask; // Placeholder para evitar warning
+        // Em produção, use: await JSRuntime.InvokeVoidAsync("document.getElementById('fileInput').click()");
+    }
+
+    private async Task CarregarImagem(InputFileChangeEventArgs e)
+    {
+        var arquivo = e.File;
+
+        if (arquivo != null)
+        {
+            // Validar tamanho (max 5MB)
+            if (arquivo.Size > 5 * 1024 * 1024)
+            {
+                Console.WriteLine("Arquivo muito grande. Máximo 5MB.");
+                return;
+            }
+
+            // Validar tipo
+            if (!arquivo.ContentType.StartsWith("image/"))
+            {
+                Console.WriteLine("Formato inválido. Use JPG ou PNG.");
+                return;
+            }
+
+            try
+            {
+                // Criar preview
+                var buffer = new byte[arquivo.Size];
+                await arquivo.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024).ReadAsync(buffer);
+                imagemPreview = $"data:{arquivo.ContentType};base64,{Convert.ToBase64String(buffer)}";
+
+                // TODO: Fazer upload da imagem para o servidor
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Erro ao carregar imagem: {ex.Message}");
+            }
+        }
+    }
+
+    private class NovaPlaylistModel
+    {
+        public string Nome { get; set; } = string.Empty;
+        public string Descricao { get; set; } = string.Empty;
+        public bool Publica { get; set; } = true;
+        public string? ImagemUrl { get; set; }
+    }
+}
