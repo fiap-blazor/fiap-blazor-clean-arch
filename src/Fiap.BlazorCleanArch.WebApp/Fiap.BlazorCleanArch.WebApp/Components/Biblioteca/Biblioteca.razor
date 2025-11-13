@@ -1,8 +1,13 @@
 ﻿@page "/biblioteca"
+@using Fiap.BlazorCleanArch.Aplicacao.DTOs.Responses
+@using Fiap.BlazorCleanArch.Aplicacao.Servicos.Interfaces
+@using Fiap.BlazorCleanArch.WebApp.Helpers
+@using Fiap.BlazorCleanArch.WebApp.Servicos
 @using Microsoft.AspNetCore.Components.Authorization
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @inject NavigationManager NavigationManager
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IUsuarioAutenticadoServico _usuarioAutenticadoServico
+@inject IPlaylistsAppServico _playlistsAppServico
 @rendermode InteractiveServer
 
 <style>
@@ -172,33 +177,6 @@
         color: rgba(255, 255, 255, 0.5);
     }
 
-    .filter-tabs {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 2rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .filter-tab {
-        padding: 0.75rem 1.5rem;
-        background: transparent;
-        border: none;
-        color: rgba(255, 255, 255, 0.6);
-        cursor: pointer;
-        transition: all 0.3s ease;
-        border-bottom: 2px solid transparent;
-        font-weight: 600;
-    }
-
-        .filter-tab:hover {
-            color: white;
-        }
-
-        .filter-tab.active {
-            color: white;
-            border-bottom-color: #60a5fa;
-        }
-
     .empty-state {
         text-align: center;
         padding: 4rem 2rem;
@@ -294,26 +272,25 @@
     }
 </style>
 
-<PageTitle>Minha Biblioteca - Fiapfy</PageTitle>
+<PageTitle>Fiapfy - Minha Biblioteca</PageTitle>
 
 <div class="library-page">
-    <!-- Header estilo Spotify -->
+    <!-- Header -->
     <div class="library-header">
         <div class="container-fluid px-5 py-5 header-content">
             <AuthorizeView>
                 <Authorized>
                     <div class="row align-items-end">
                         <div class="col-auto">
-                            <img src="@ObterAvatarUrl(context.User.Identity?.Name)"
+                            <img src="@GravatarHelper.ObterGravatarUrl(@usuarioEmail, 400)"
                                  class="profile-image"
                                  alt="Foto do perfil" />
                         </div>
                         <div class="col">
                             <p class="text-white-50 mb-2 small text-uppercase fw-semibold">Biblioteca</p>
-                            <h1 class="display-3 fw-bold text-white mb-3">@ObterNomeUsuario(context.User.Identity?.Name)</h1>
+                            <h1 class="display-3 fw-bold text-white mb-3">@usuarioNome</h1>
                             <p class="text-white-50 mb-0">
-                                <span class="fw-semibold">@playlists.Count(p => p.CriadaPorMim)</span> playlists criadas •
-                                <span class="fw-semibold">@playlists.Count</span> total
+                                <span class="fw-semibold">@playlists.Count</span> @(playlists.Count == 1 ? "playlist" : "playlists")
                             </p>
                         </div>
                     </div>
@@ -325,26 +302,13 @@
     <!-- Conteúdo principal -->
     <div class="library-content">
         <div class="container-fluid px-5 py-4">
-            <!-- Filter Tabs -->
-            <div class="filter-tabs">
-                <button class="filter-tab @(filtroAtivo == "todas" ? "active" : "")" @onclick='() => FiltrarPlaylists("todas")'>
-                    Todas
-                </button>
-                <button class="filter-tab @(filtroAtivo == "criadas" ? "active" : "")" @onclick='() => FiltrarPlaylists("criadas")'>
-                    Criadas por mim
-                </button>
-                <button class="filter-tab @(filtroAtivo == "seguidas" ? "active" : "")" @onclick='() => FiltrarPlaylists("seguidas")'>
-                    Seguindo
-                </button>
-            </div>
-
-            @if (playlistsFiltradas.Any())
+            @if (playlists.Any())
             {
                 <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-6 g-4">
                     <!-- Card de Criar Nova Playlist -->
                     <div class="col">
                         <div class="create-playlist-card rounded-3 p-4 d-flex flex-column align-items-center justify-content-center h-100"
-                             @onclick="AbrirModalCriarPlaylist">
+                             @onclick='() => NavigationManager.NavigateTo("/playlist/nova")'>
                             <div class="create-icon">
                                 <i class="bi bi-plus-lg"></i>
                             </div>
@@ -354,22 +318,17 @@
                     </div>
 
                     <!-- Playlists do Usuário -->
-                    @foreach (var playlist in playlistsFiltradas)
+                    @foreach (var playlist in playlists)
                     {
                         <div class="col">
                             <div class="playlist-card rounded-3 p-3 h-100 d-flex flex-column"
                                  @onclick="() => AbrirPlaylist(playlist.Id)">
                                 <div class="playlist-cover mb-3 position-relative rounded-2">
-                                    @if (!string.IsNullOrEmpty(playlist.ImageUrl))
-                                    {
-                                        <img src="@playlist.ImageUrl" alt="@playlist.Nome" />
-                                    }
-                                    else
-                                    {
-                                        <div class="placeholder-icon">
-                                            <i class="bi bi-music-note-list"></i>
-                                        </div>
-                                    }
+
+                                    <div class="placeholder-icon">
+                                        <i class="bi bi-music-note-list"></i>
+                                    </div>
+
                                     <div class="play-button position-absolute bottom-0 end-0 m-3 opacity-0">
                                         <button class="btn rounded-circle shadow">
                                             <i class="bi bi-play-fill"></i>
@@ -379,10 +338,10 @@
                                 <div class="playlist-info">
                                     <div>
                                         <h3 class="h6 text-white fw-semibold mb-1 text-truncate">@playlist.Nome</h3>
-                                        <p class="small text-white-50 mb-2">@playlist.CriadoPor</p>
+                                        <p class="small text-white-50 mb-2">@playlist.Descricao</p>
                                     </div>
                                     <div class="playlist-stats">
-                                        <i class="bi bi-music-note me-1"></i> @playlist.TotalMusicas músicas
+                                        @* <i class="bi bi-music-note me-1"></i> @playlist.TotalMusicas @(playlist.TotalMusicas == 1 ? "música" : "músicas") *@
                                     </div>
                                 </div>
                             </div>
@@ -397,7 +356,7 @@
                     <h3>Nenhuma playlist encontrada</h3>
                     <p class="mb-4">Comece criando sua primeira playlist!</p>
                     <button class="btn btn-create-playlist btn-lg rounded-pill px-5 fw-semibold"
-                            @onclick="AbrirModalCriarPlaylist">
+                            @onclick='() => NavigationManager.NavigateTo("/playlist/nova")'>
                         <i class="bi bi-plus-lg me-2"></i>Criar Playlist
                     </button>
                 </div>
@@ -406,159 +365,27 @@
     </div>
 </div>
 
-<!-- Modal Criar Playlist -->
-@if (mostrarModal)
-{
-    <div class="modal fade show d-block modal-dark" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.8);">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold">Criar Nova Playlist</h5>
-                    <button type="button" class="btn-close" @onclick="FecharModal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="playlistName" class="form-label">Nome da Playlist</label>
-                        <input type="text" class="form-control" id="playlistName"
-                               @bind="novaPlaylist.Nome"
-                               placeholder="Minha Playlist Incrível" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="playlistDescription" class="form-label">Descrição (opcional)</label>
-                        <textarea class="form-control" id="playlistDescription"
-                                  @bind="novaPlaylist.Descricao"
-                                  rows="3"
-                                  placeholder="Adicione uma descrição..."></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="playlistPrivacy" class="form-label">Privacidade</label>
-                        <select class="form-select" id="playlistPrivacy" @bind="novaPlaylist.Publica">
-                            <option value="true">Pública - Qualquer pessoa pode ver</option>
-                            <option value="false">Privada - Apenas você pode ver</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="FecharModal">Cancelar</button>
-                    <button type="button" class="btn btn-create-playlist" @onclick="CriarPlaylist">
-                        <i class="bi bi-plus-lg me-2"></i>Criar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
 @code {
-    private List<PlaylistModel> playlists = new();
-    private List<PlaylistModel> playlistsFiltradas = new();
-    private string filtroAtivo = "todas";
-    private bool mostrarModal = false;
-    private NovaPlaylistModel novaPlaylist = new();
+    private IReadOnlyList<PlaylistListarResponse> playlists = [];
+    private string usuarioId = string.Empty;
+    private string usuarioNome = string.Empty;
+    private string usuarioEmail = string.Empty;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        CarregarPlaylists();
-        FiltrarPlaylists("todas");
+        usuarioId = await _usuarioAutenticadoServico.ObterIdUsuarioAsync();
+        usuarioNome = await _usuarioAutenticadoServico.ObterNomeUsuarioAsync();
+        usuarioEmail = await _usuarioAutenticadoServico.ObterEmailUsuarioAsync();
+        await CarregarPlaylists();
     }
 
-    private void CarregarPlaylists()
-    {
-        // TODO: Carregar do backend
-        playlists = new List<PlaylistModel>
-        {
-            new() { Id = 1, Nome = "Músicas Favoritas", CriadoPor = "Você", TotalMusicas = 42, ImageUrl = "https://picsum.photos/300/300?random=1", CriadaPorMim = true },
-            new() { Id = 2, Nome = "Rock Clássico", CriadoPor = "Você", TotalMusicas = 28, ImageUrl = "https://picsum.photos/300/300?random=2", CriadaPorMim = true },
-            new() { Id = 3, Nome = "Chill Vibes", CriadoPor = "Você", TotalMusicas = 35, ImageUrl = "https://picsum.photos/300/300?random=3", CriadaPorMim = true },
-            new() { Id = 4, Nome = "Workout Mix", CriadoPor = "Você", TotalMusicas = 20, ImageUrl = "", CriadaPorMim = true },
-            new() { Id = 5, Nome = "Top Hits 2024", CriadoPor = "Fiapfy", TotalMusicas = 50, ImageUrl = "https://picsum.photos/300/300?random=5", CriadaPorMim = false },
-            new() { Id = 6, Nome = "Jazz & Blues", CriadoPor = "Jazz Masters", TotalMusicas = 45, ImageUrl = "https://picsum.photos/300/300?random=6", CriadaPorMim = false },
-        };
-    }
-
-    private void FiltrarPlaylists(string filtro)
-    {
-        filtroAtivo = filtro;
-        playlistsFiltradas = filtro switch
-        {
-            "criadas" => playlists.Where(p => p.CriadaPorMim).ToList(),
-            "seguidas" => playlists.Where(p => !p.CriadaPorMim).ToList(),
-            _ => playlists.ToList()
-        };
-    }
-
-    private void AbrirModalCriarPlaylist()
-    {
-        novaPlaylist = new NovaPlaylistModel();
-        mostrarModal = true;
-    }
-
-    private void FecharModal()
-    {
-        mostrarModal = false;
-        novaPlaylist = new NovaPlaylistModel();
-    }
-
-    private void CriarPlaylist()
-    {
-        if (string.IsNullOrWhiteSpace(novaPlaylist.Nome))
-        {
-            return;
-        }
-
-        // TODO: Salvar no backend
-        var playlist = new PlaylistModel
-        {
-            Id = playlists.Max(p => p.Id) + 1,
-            Nome = novaPlaylist.Nome,
-            CriadoPor = "Você",
-            TotalMusicas = 0,
-            ImageUrl = "",
-            CriadaPorMim = true
-        };
-
-        playlists.Insert(0, playlist);
-        FiltrarPlaylists(filtroAtivo);
-        FecharModal();
+    private async Task CarregarPlaylists()
+    {        
+        playlists = await _playlistsAppServico.ListarPlaylistsDoUsuarioAsync(usuarioId);
     }
 
     private void AbrirPlaylist(int playlistId)
     {
         NavigationManager.NavigateTo($"/playlist/{playlistId}");
-    }
-
-    private string ObterAvatarUrl(string? email)
-    {
-        if (string.IsNullOrWhiteSpace(email))
-            return "https://ui-avatars.com/api/?name=Usuario&size=400&background=60a5fa&color=fff";
-
-        var emailLimpo = email.Split('@')[0];
-        return $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(emailLimpo)}&size=400&background=60a5fa&color=fff&bold=true";
-    }
-
-    private string ObterNomeUsuario(string? nomeCompleto)
-    {
-        if (string.IsNullOrWhiteSpace(nomeCompleto))
-            return "Minha Biblioteca";
-
-        var partes = nomeCompleto.Split('@');
-        return partes[0];
-    }
-
-    private class PlaylistModel
-    {
-        public int Id { get; set; }
-        public string Nome { get; set; } = string.Empty;
-        public string CriadoPor { get; set; } = string.Empty;
-        public int TotalMusicas { get; set; }
-        public string ImageUrl { get; set; } = string.Empty;
-        public bool CriadaPorMim { get; set; }
-    }
-
-    private class NovaPlaylistModel
-    {
-        public string Nome { get; set; } = string.Empty;
-        public string Descricao { get; set; } = string.Empty;
-        public bool Publica { get; set; } = true;
     }
 }

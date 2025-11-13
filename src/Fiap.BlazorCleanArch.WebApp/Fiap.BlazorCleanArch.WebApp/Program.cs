@@ -1,6 +1,11 @@
+using Fiap.BlazorCleanArch.Aplicacao.Servicos;
+using Fiap.BlazorCleanArch.Aplicacao.Servicos.Interfaces;
+using Fiap.BlazorCleanArch.Dominio.Interfaces;
 using Fiap.BlazorCleanArch.Infra.Contexts;
+using Fiap.BlazorCleanArch.Infra.Repositorios;
 using Fiap.BlazorCleanArch.WebApp.Components;
 using Fiap.BlazorCleanArch.WebApp.Components.Account;
+using Fiap.BlazorCleanArch.WebApp.Servicos;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -39,6 +44,13 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
+
+
+builder.Services.AddAutoMapper(typeof(PlaylistsAppServico).Assembly);
+builder.Services.AddScoped<IUsuarioAutenticadoServico, UsuarioAutenticadoServico>();
+
+builder.Services.AddScoped<IPlaylistsAppServico, PlaylistsAppServico>();
+builder.Services.AddScoped<IPlaylistsRepositorio, PlaylistsRepositorio>();
 
 var app = builder.Build();
 
