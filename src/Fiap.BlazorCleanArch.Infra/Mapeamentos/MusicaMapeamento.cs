@@ -21,9 +21,6 @@ public class MusicaMapeamento : IEntityTypeConfiguration<Musica>
             .WithMany()
             .IsRequired();
 
-        builder.HasMany(p => p.Playlists)
-            .WithMany(m => m.Musicas);
-
         builder.ToTable("Musica");
     }
 }

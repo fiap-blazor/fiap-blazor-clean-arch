@@ -27,9 +27,6 @@ public class PlaylistMapeamento : IEntityTypeConfiguration<Playlist>
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(p => p.Musicas)
-            .WithMany(m => m.Playlists);
-
         builder.HasIndex(p => p.UsuarioId);
 
         builder.ToTable("Playlist");

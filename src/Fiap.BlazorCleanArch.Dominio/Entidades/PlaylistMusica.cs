@@ -2,7 +2,7 @@
 
 namespace Fiap.BlazorCleanArch.Dominio.Entidades;
 
-public class MusicaPlaylist : Entity
+public class PlaylistMusica : Entity
 {
     public int MusicaId { get; protected set; }
     public Musica Musica { get; protected set; } = default!;
@@ -13,10 +13,10 @@ public class MusicaPlaylist : Entity
     public DateTime DataAdicao { get; protected set; }
 
 
-    public MusicaPlaylist() { }
+    public PlaylistMusica() { }
 
 
-    public MusicaPlaylist(int musicaId, int playlistId)
+    public PlaylistMusica(int musicaId, int playlistId)
     {
         MusicaId = musicaId;
         PlaylistId = playlistId;

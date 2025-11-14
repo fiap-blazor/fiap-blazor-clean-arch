@@ -6,18 +6,18 @@ namespace Fiap.BlazorCleanArch.Dominio.Entidades;
 public class Playlist : Entity
 {
     public string Nome { get; protected set; } = string.Empty;
-    public string Descricao { get; protected set; } = string.Empty;
-    public IReadOnlySet<Musica> Musicas { get; protected set; } = new HashSet<Musica>();
+    public string Descricao { get; protected set; } = string.Empty;    
     public string UsuarioId { get; protected set; } = string.Empty;
+
+    public IReadOnlySet<Musica> Musicas { get; protected set; } = new HashSet<Musica>();
 
     public Playlist() { }
 
-    public Playlist(string nome, string? descricao, string usuarioId, ICollection<Musica> musicas)
+    public Playlist(string nome, string? descricao, string usuarioId)
     {
         SetNome(nome);
         SetDescricao(descricao);
         SetUsuarioId(usuarioId);
-        SetMusicas(musicas);
     }
 
     public void SetNome(string nome)
@@ -45,10 +45,5 @@ public class Playlist : Entity
             throw new AtributoObrigatorioExcecao(nameof(UsuarioId));
 
         UsuarioId = usuarioId;
-    }
-
-    public void SetMusicas(ICollection<Musica> musicas)
-    {
-        Musicas = new HashSet<Musica>(musicas);
     }
 }

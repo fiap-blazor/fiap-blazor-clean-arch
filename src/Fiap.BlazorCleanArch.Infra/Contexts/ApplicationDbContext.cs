@@ -10,6 +10,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Album> Albums { get; set; }
     public DbSet<Musica> Musicas { get; set; }
     public DbSet<Playlist> Playlists { get; set; }
+    public DbSet<PlaylistMusica> MusicaPlaylist { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

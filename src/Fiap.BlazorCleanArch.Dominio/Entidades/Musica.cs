@@ -8,7 +8,6 @@ public class Musica : Entity
     public string Nome { get; protected set; } = string.Empty;
     public TimeSpan Duracao { get; protected set; }
     public Album Album { get; protected set; } = default!;
-    public IReadOnlySet<Playlist> Playlists { get; protected set; } = new HashSet<Playlist>();
 
     public Musica() { }
 

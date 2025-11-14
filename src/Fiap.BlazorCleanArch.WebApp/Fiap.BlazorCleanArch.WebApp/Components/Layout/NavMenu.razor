@@ -33,7 +33,7 @@
                 <Authorized>
                     <div class="nav-item px-3">
                         <NavLink class="nav-link d-flex align-items-center" href="Account/Manage">
-                            <img src="@GravatarHelper.ObterGravatarUrl(@usuarioEmail, 32)"
+                            <img src="@GravatarHelper.ObterGravatarUrl(context.User.FindFirst("email")?.Value ?? string.Empty, 32)"
                                  width="32"
                                  height="32"
                                  class="rounded-circle me-2"
@@ -70,13 +70,11 @@
 
 @code {
     private string? currentUrl;
-    private string usuarioEmail = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
         currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
         NavigationManager.LocationChanged += OnLocationChanged;
-        usuarioEmail = await _usuarioAutenticadoServico.ObterEmailUsuarioAsync();
     }
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)

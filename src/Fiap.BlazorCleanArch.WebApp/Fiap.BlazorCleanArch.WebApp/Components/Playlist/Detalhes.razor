@@ -526,7 +526,7 @@
     private bool mostrarModal = false;
     private string termoBusca = string.Empty;
     private string? usuarioAtual;
-    private bool ehDonoPlaylist = false;
+    private bool ehDonoPlaylist = true;
 
     private IEnumerable<MusicaModel> musicasFiltradas =>
         string.IsNullOrWhiteSpace(termoBusca)
@@ -581,7 +581,7 @@
             Id = Id,
             Nome = "Minha Playlist",
             Descricao = "As melhores músicas selecionadas",
-            CriadoPor = "Neymar Santos", // TODO: Carregar o nome real do criador
+            CriadoPor = "Você", // TODO: Carregar o nome real do criador
             ImageUrl = "https://picsum.photos/300/300?random=1"
         };
     }

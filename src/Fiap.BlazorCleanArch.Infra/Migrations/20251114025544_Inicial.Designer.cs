@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Fiap.BlazorCleanArch.Infra.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251112021709_Inicial")]
+    [Migration("20251114025544_Inicial")]
     partial class Inicial
     {
         /// <inheritdoc />
@@ -84,9 +84,14 @@ namespace Fiap.BlazorCleanArch.Infra.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(50)");
 
+                    b.Property<int?>("PlaylistId")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AlbumId");
+
+                    b.HasIndex("PlaylistId");
 
                     b.ToTable("Musica", (string)null);
                 });
@@ -116,6 +121,31 @@ namespace Fiap.BlazorCleanArch.Infra.Migrations
                     b.HasIndex("UsuarioId");
 
                     b.ToTable("Playlist", (string)null);
+                });
+
+            modelBuilder.Entity("Fiap.BlazorCleanArch.Dominio.Entidades.PlaylistMusica", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("DataAdicao")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("MusicaId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PlaylistId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MusicaId");
+
+                    b.HasIndex("PlaylistId", "MusicaId")
+                        .IsUnique();
+
+                    b.ToTable("MusicaPlaylist", (string)null);
                 });
 
             modelBuilder.Entity("Fiap.BlazorCleanArch.Infra.Contexts.ApplicationUser", b =>
@@ -332,21 +362,6 @@ namespace Fiap.BlazorCleanArch.Infra.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("MusicaPlaylist", b =>
-                {
-                    b.Property<int>("MusicasId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("PlaylistsId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("MusicasId", "PlaylistsId");
-
-                    b.HasIndex("PlaylistsId");
-
-                    b.ToTable("MusicaPlaylist");
-                });
-
             modelBuilder.Entity("Fiap.BlazorCleanArch.Dominio.Entidades.Album", b =>
                 {
                     b.HasOne("Fiap.BlazorCleanArch.Dominio.Entidades.Artista", "Artista")
@@ -366,6 +381,10 @@ namespace Fiap.BlazorCleanArch.Infra.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Fiap.BlazorCleanArch.Dominio.Entidades.Playlist", null)
+                        .WithMany("Musicas")
+                        .HasForeignKey("PlaylistId");
+
                     b.Navigation("Album");
                 });
 
@@ -376,6 +395,25 @@ namespace Fiap.BlazorCleanArch.Infra.Migrations
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Fiap.BlazorCleanArch.Dominio.Entidades.PlaylistMusica", b =>
+                {
+                    b.HasOne("Fiap.BlazorCleanArch.Dominio.Entidades.Musica", "Musica")
+                        .WithMany()
+                        .HasForeignKey("MusicaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Fiap.BlazorCleanArch.Dominio.Entidades.Playlist", "Playlist")
+                        .WithMany()
+                        .HasForeignKey("PlaylistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Musica");
+
+                    b.Navigation("Playlist");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -478,19 +516,9 @@ namespace Fiap.BlazorCleanArch.Infra.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("MusicaPlaylist", b =>
+            modelBuilder.Entity("Fiap.BlazorCleanArch.Dominio.Entidades.Playlist", b =>
                 {
-                    b.HasOne("Fiap.BlazorCleanArch.Dominio.Entidades.Musica", null)
-                        .WithMany()
-                        .HasForeignKey("MusicasId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Fiap.BlazorCleanArch.Dominio.Entidades.Playlist", null)
-                        .WithMany()
-                        .HasForeignKey("PlaylistsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("Musicas");
                 });
 #pragma warning restore 612, 618
         }

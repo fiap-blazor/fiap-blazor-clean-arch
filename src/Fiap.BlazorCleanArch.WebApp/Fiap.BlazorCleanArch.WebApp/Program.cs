@@ -1,6 +1,7 @@
 using Fiap.BlazorCleanArch.Aplicacao.Servicos;
 using Fiap.BlazorCleanArch.Aplicacao.Servicos.Interfaces;
 using Fiap.BlazorCleanArch.Dominio.Interfaces;
+using Fiap.BlazorCleanArch.Infra;
 using Fiap.BlazorCleanArch.Infra.Contexts;
 using Fiap.BlazorCleanArch.Infra.Repositorios;
 using Fiap.BlazorCleanArch.WebApp.Components;
@@ -45,7 +46,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
-
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddAutoMapper(typeof(PlaylistsAppServico).Assembly);
 builder.Services.AddScoped<IUsuarioAutenticadoServico, UsuarioAutenticadoServico>();
 

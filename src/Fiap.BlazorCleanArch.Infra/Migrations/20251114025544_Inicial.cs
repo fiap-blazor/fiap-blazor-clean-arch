@@ -241,7 +241,8 @@ namespace Fiap.BlazorCleanArch.Infra.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     Nome = table.Column<string>(type: "varchar(50)", nullable: false),
                     Duracao = table.Column<TimeSpan>(type: "TEXT", nullable: false),
-                    AlbumId = table.Column<int>(type: "INTEGER", nullable: false)
+                    AlbumId = table.Column<int>(type: "INTEGER", nullable: false),
+                    PlaylistId = table.Column<int>(type: "INTEGER", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -252,27 +253,35 @@ namespace Fiap.BlazorCleanArch.Infra.Migrations
                         principalTable: "Album",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Musica_Playlist_PlaylistId",
+                        column: x => x.PlaylistId,
+                        principalTable: "Playlist",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
                 name: "MusicaPlaylist",
                 columns: table => new
                 {
-                    MusicasId = table.Column<int>(type: "INTEGER", nullable: false),
-                    PlaylistsId = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    MusicaId = table.Column<int>(type: "INTEGER", nullable: false),
+                    PlaylistId = table.Column<int>(type: "INTEGER", nullable: false),
+                    DataAdicao = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_MusicaPlaylist", x => new { x.MusicasId, x.PlaylistsId });
+                    table.PrimaryKey("PK_MusicaPlaylist", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_MusicaPlaylist_Musica_MusicasId",
-                        column: x => x.MusicasId,
+                        name: "FK_MusicaPlaylist_Musica_MusicaId",
+                        column: x => x.MusicaId,
                         principalTable: "Musica",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_MusicaPlaylist_Playlist_PlaylistsId",
-                        column: x => x.PlaylistsId,
+                        name: "FK_MusicaPlaylist_Playlist_PlaylistId",
+                        column: x => x.PlaylistId,
                         principalTable: "Playlist",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -331,9 +340,20 @@ namespace Fiap.BlazorCleanArch.Infra.Migrations
                 column: "AlbumId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_MusicaPlaylist_PlaylistsId",
+                name: "IX_Musica_PlaylistId",
+                table: "Musica",
+                column: "PlaylistId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MusicaPlaylist_MusicaId",
                 table: "MusicaPlaylist",
-                column: "PlaylistsId");
+                column: "MusicaId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MusicaPlaylist_PlaylistId_MusicaId",
+                table: "MusicaPlaylist",
+                columns: new[] { "PlaylistId", "MusicaId" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Playlist_UsuarioId",
@@ -372,16 +392,16 @@ namespace Fiap.BlazorCleanArch.Infra.Migrations
                 name: "Musica");
 
             migrationBuilder.DropTable(
-                name: "Playlist");
-
-            migrationBuilder.DropTable(
                 name: "Album");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
+                name: "Playlist");
 
             migrationBuilder.DropTable(
                 name: "Artista");
+
+            migrationBuilder.DropTable(
+                name: "AspNetUsers");
         }
     }
 }
