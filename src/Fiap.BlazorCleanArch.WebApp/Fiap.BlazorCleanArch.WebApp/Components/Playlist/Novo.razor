@@ -1,8 +1,12 @@
 ﻿@page "/playlist/nova"
+@using Fiap.BlazorCleanArch.Aplicacao.DTOs.Requests
+@using Fiap.BlazorCleanArch.Aplicacao.Servicos.Interfaces
+@using Fiap.BlazorCleanArch.WebApp.Servicos
 @using Microsoft.AspNetCore.Components.Authorization
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @inject NavigationManager NavigationManager
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IUsuarioAutenticadoServico _usuarioAutenticadoServico
+@inject IPlaylistsAppServico _playlistsAppServico
 @rendermode InteractiveServer
 
 <style>
@@ -232,7 +236,7 @@
         }
 </style>
 
-<PageTitle>Criar Playlist - Fiapfy</PageTitle>
+<PageTitle>Fiapfy - Criar Playlist</PageTitle>
 
 <div class="create-playlist-page">
     <!-- Header -->
@@ -251,7 +255,7 @@
     <div class="page-content">
         <div class="container-fluid px-5 py-5">
             <div class="form-card">
-                <EditForm Model="@novaPlaylist" OnValidSubmit="@SalvarPlaylist">
+                <EditForm Model="@Model" OnValidSubmit="@SalvarPlaylist">
                     <div class="row g-4">
                         <!-- Coluna da Capa -->
                         <div class="col-md-4">
@@ -260,7 +264,7 @@
                                  @onclick="SelecionarImagem">
                                 @if (imagemPreview != null)
                                 {
-                                    <img src="@imagemPreview" alt="Preview da capa" />
+                                    <img src="@imagemPreview" />
                                     <div class="upload-placeholder" style="background: rgba(0,0,0,0.6);">
                                         <i class="bi bi-camera-fill d-block"></i>
                                         <p class="text-white mb-0 small">Clique para alterar</p>
@@ -290,11 +294,11 @@
                                 </label>
                                 <InputText id="nome"
                                            class="form-control form-control-lg"
-                                           @bind-Value="novaPlaylist.Nome"
+                                           @bind-Value="Model.Nome"
                                            placeholder="Minha Playlist Incrível"
                                            maxlength="100" />
-                                <div class="character-count @(novaPlaylist.Nome.Length > 80 ? "limit-warning" : "")">
-                                    @novaPlaylist.Nome.Length / 100
+                                <div class="character-count @(Model.Nome.Length > 80 ? "limit-warning" : "")">
+                                    @Model.Nome.Length / 100
                                 </div>
                             </div>
 
@@ -303,17 +307,17 @@
                                 <label for="descricao" class="form-label">Descrição</label>
                                 <InputTextArea id="descricao"
                                                class="form-control"
-                                               @bind-Value="novaPlaylist.Descricao"
+                                               @bind-Value="Model.Descricao"
                                                placeholder="Adicione uma descrição opcional para sua playlist..."
                                                rows="4"
                                                maxlength="300" />
-                                <div class="character-count @(novaPlaylist.Descricao.Length > 250 ? "limit-warning" : "")">
-                                    @novaPlaylist.Descricao.Length / 300
+                                <div class="character-count @(Model.Descricao.Length > 250 ? "limit-warning" : "")">
+                                    @Model.Descricao.Length / 300
                                 </div>
                             </div>
 
                             <!-- Privacidade -->
-                            <div class="mb-4">
+                            @* <div class="mb-4">
                                 <label class="form-label d-block mb-3">Privacidade</label>
                                 
                                 <div class="privacy-option @(novaPlaylist.Publica ? "selected" : "")"
@@ -349,7 +353,7 @@
                                         }
                                     </div>
                                 </div>
-                            </div>
+                            </div> *@
 
                             <!-- Botões de Ação -->
                             <div class="d-flex gap-3 mt-4">
@@ -378,25 +382,25 @@
 </div>
 
 @code {
-    private NovaPlaylistModel novaPlaylist = new();
+    private PlaylistInserirRequest Model = new();
     private string? imagemPreview;
     private bool salvando = false;
+    private string usuarioId = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        usuarioId = await _usuarioAutenticadoServico.ObterIdUsuarioAsync();
+    }
 
     private async Task SalvarPlaylist()
     {
-        if (string.IsNullOrWhiteSpace(novaPlaylist.Nome))
-        {
-            return;
-        }
-
         salvando = true;
 
         try
         {
-            // TODO: Implementar salvamento no backend
-            await Task.Delay(1500); // Simula chamada API
+            await Task.Delay(2000);
 
-            // Redireciona para a biblioteca
+            await _playlistsAppServico.InserirAsync(Model, usuarioId);
             NavigationManager.NavigateTo("/biblioteca");
         }
         catch (Exception ex)
@@ -450,13 +454,5 @@
                 Console.Error.WriteLine($"Erro ao carregar imagem: {ex.Message}");
             }
         }
-    }
-
-    private class NovaPlaylistModel
-    {
-        public string Nome { get; set; } = string.Empty;
-        public string Descricao { get; set; } = string.Empty;
-        public bool Publica { get; set; } = true;
-        public string? ImagemUrl { get; set; }
     }
 }
