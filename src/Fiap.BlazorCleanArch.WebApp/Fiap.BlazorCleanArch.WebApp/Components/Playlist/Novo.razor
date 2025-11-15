@@ -256,30 +256,20 @@
         <div class="container-fluid px-5 py-5">
             <div class="form-card">
                 <EditForm Model="@Model" OnValidSubmit="@SalvarPlaylist">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
                     <div class="row g-4">
                         <!-- Coluna da Capa -->
                         <div class="col-md-4">
                             <label class="form-label">Imagem da Capa</label>
-                            <div class="cover-upload-area @(imagemPreview != null ? "has-image" : "")"
-                                 @onclick="SelecionarImagem">
-                                @if (imagemPreview != null)
-                                {
-                                    <img src="@imagemPreview" />
-                                    <div class="upload-placeholder" style="background: rgba(0,0,0,0.6);">
-                                        <i class="bi bi-camera-fill d-block"></i>
-                                        <p class="text-white mb-0 small">Clique para alterar</p>
-                                    </div>
-                                }
-                                else
-                                {
+                            <div class="cover-upload-area">
                                     <div class="upload-placeholder">
                                         <i class="bi bi-image d-block"></i>
                                         <p class="text-white mb-2 fw-semibold">Adicionar capa</p>
                                         <p class="text-white-50 mb-0 small">Clique para fazer upload</p>
-                                    </div>
-                                }
-                            </div>
-                            <InputFile OnChange="@CarregarImagem" class="d-none" id="fileInput" accept="image/*" />
+                                    </div>                                
+                            </div>                            
                             <p class="info-text mt-2">
                                 Recomendado: 300x300px ou maior, JPG ou PNG
                             </p>
@@ -383,7 +373,6 @@
 
 @code {
     private PlaylistInserirRequest Model = new();
-    private string? imagemPreview;
     private bool salvando = false;
     private string usuarioId = string.Empty;
 
@@ -398,10 +387,10 @@
 
         try
         {
-            await Task.Delay(2000);
+            await Task.Delay(5000);
 
-            await _playlistsAppServico.InserirAsync(Model, usuarioId);
-            NavigationManager.NavigateTo("/biblioteca");
+            var playlistId = await _playlistsAppServico.InserirAsync(Model, usuarioId);
+            NavigationManager.NavigateTo($"/playlist/{playlistId}");
         }
         catch (Exception ex)
         {
@@ -411,48 +400,5 @@
         {
             salvando = false;
         }
-    }
-
-    private async Task SelecionarImagem()
-    {
-        // Trigger o input file via JavaScript
-        await Task.CompletedTask; // Placeholder para evitar warning
-        // Em produção, use: await JSRuntime.InvokeVoidAsync("document.getElementById('fileInput').click()");
-    }
-
-    private async Task CarregarImagem(InputFileChangeEventArgs e)
-    {
-        var arquivo = e.File;
-
-        if (arquivo != null)
-        {
-            // Validar tamanho (max 5MB)
-            if (arquivo.Size > 5 * 1024 * 1024)
-            {
-                Console.WriteLine("Arquivo muito grande. Máximo 5MB.");
-                return;
-            }
-
-            // Validar tipo
-            if (!arquivo.ContentType.StartsWith("image/"))
-            {
-                Console.WriteLine("Formato inválido. Use JPG ou PNG.");
-                return;
-            }
-
-            try
-            {
-                // Criar preview
-                var buffer = new byte[arquivo.Size];
-                await arquivo.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024).ReadAsync(buffer);
-                imagemPreview = $"data:{arquivo.ContentType};base64,{Convert.ToBase64String(buffer)}";
-
-                // TODO: Fazer upload da imagem para o servidor
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Erro ao carregar imagem: {ex.Message}");
-            }
-        }
-    }
+    }   
 }

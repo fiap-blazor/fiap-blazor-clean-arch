@@ -5,7 +5,8 @@ namespace Fiap.BlazorCleanArch.Aplicacao.Servicos.Interfaces
 {
     public interface IPlaylistsAppServico
     {
-        Task InserirAsync(PlaylistInserirRequest request, string usuarioId);
+        Task<int> InserirAsync(PlaylistInserirRequest request, string usuarioId);
         Task<IReadOnlyList<PlaylistListarResponse>> ListarPlaylistsDoUsuarioAsync(string usuarioId);
+        Task<PlaylistResponse?> ObterPorIdAsync(int id);
     }
 }

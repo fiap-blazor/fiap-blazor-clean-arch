@@ -4,12 +4,10 @@ using Fiap.BlazorCleanArch.Dominio.Entidades;
 
 namespace Fiap.BlazorCleanArch.Aplicacao.Profiles;
 
-public class PlaylistsProfile : Profile
+public class ArtistaProfile : Profile
 {
-    public PlaylistsProfile()
+    public ArtistaProfile()
     {
-        CreateMap<Playlist, PlaylistListarResponse>();
-
-        CreateMap<Playlist, PlaylistResponse>();
+        CreateMap<Artista, ArtistaResponse>();
     }
 }

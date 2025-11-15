@@ -6,10 +6,12 @@ namespace Fiap.BlazorCleanArch.Dominio.Entidades;
 public class Playlist : Entity
 {
     public string Nome { get; protected set; } = string.Empty;
-    public string Descricao { get; protected set; } = string.Empty;    
+    public string Descricao { get; protected set; } = string.Empty;     
     public string UsuarioId { get; protected set; } = string.Empty;
 
-    public IReadOnlySet<Musica> Musicas { get; protected set; } = new HashSet<Musica>();
+    // Propriedade de navegação para a tabela intermediária
+    private readonly HashSet<PlaylistMusica> _playlistMusicas = [];
+    public IReadOnlyCollection<PlaylistMusica> PlaylistMusicas => _playlistMusicas;
 
     public Playlist() { }
 

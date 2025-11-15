@@ -28,7 +28,16 @@ public class PlaylistsAppServico : IPlaylistsAppServico
         return _mapper.Map<IReadOnlyList<PlaylistListarResponse>>(playlists);
     }
 
-    public async Task InserirAsync(PlaylistInserirRequest request, string usuarioId)
+    public async Task<PlaylistResponse?> ObterPorIdAsync(int id)
+    {
+        var playlist = await _playlistsRepositorio.ObterPorIdAsync(id);
+        if (playlist == null)
+            return null;
+
+        return _mapper.Map<PlaylistResponse>(playlist);
+    }
+
+    public async Task<int> InserirAsync(PlaylistInserirRequest request, string usuarioId)
     {
         try
         {
@@ -39,6 +48,8 @@ public class PlaylistsAppServico : IPlaylistsAppServico
             await _playlistsRepositorio.InserirAsync(playlist);
 
             await _unitOfWork.CommitAsync();
+
+            return playlist.Id;
         }
         catch (Exception ex)
         {

@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Fiap.BlazorCleanArch.Infra.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251114025544_Inicial")]
+    [Migration("20251115025420_Inicial")]
     partial class Inicial
     {
         /// <inheritdoc />
@@ -84,14 +84,9 @@ namespace Fiap.BlazorCleanArch.Infra.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(50)");
 
-                    b.Property<int?>("PlaylistId")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("Id");
 
                     b.HasIndex("AlbumId");
-
-                    b.HasIndex("PlaylistId");
 
                     b.ToTable("Musica", (string)null);
                 });
@@ -145,7 +140,7 @@ namespace Fiap.BlazorCleanArch.Infra.Migrations
                     b.HasIndex("PlaylistId", "MusicaId")
                         .IsUnique();
 
-                    b.ToTable("MusicaPlaylist", (string)null);
+                    b.ToTable("PlaylistMusica", (string)null);
                 });
 
             modelBuilder.Entity("Fiap.BlazorCleanArch.Infra.Contexts.ApplicationUser", b =>
@@ -381,10 +376,6 @@ namespace Fiap.BlazorCleanArch.Infra.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Fiap.BlazorCleanArch.Dominio.Entidades.Playlist", null)
-                        .WithMany("Musicas")
-                        .HasForeignKey("PlaylistId");
-
                     b.Navigation("Album");
                 });
 
@@ -406,7 +397,7 @@ namespace Fiap.BlazorCleanArch.Infra.Migrations
                         .IsRequired();
 
                     b.HasOne("Fiap.BlazorCleanArch.Dominio.Entidades.Playlist", "Playlist")
-                        .WithMany()
+                        .WithMany("PlaylistMusicas")
                         .HasForeignKey("PlaylistId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -518,7 +509,7 @@ namespace Fiap.BlazorCleanArch.Infra.Migrations
 
             modelBuilder.Entity("Fiap.BlazorCleanArch.Dominio.Entidades.Playlist", b =>
                 {
-                    b.Navigation("Musicas");
+                    b.Navigation("PlaylistMusicas");
                 });
 #pragma warning restore 612, 618
         }

@@ -24,14 +24,9 @@ public class PlaylistMusicaMapeamento : IEntityTypeConfiguration<PlaylistMusica>
             .HasForeignKey(mp => mp.MusicaId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasOne(mp => mp.Playlist)
-            .WithMany()
-            .HasForeignKey(mp => mp.PlaylistId)
-            .OnDelete(DeleteBehavior.Cascade);
-
         builder.HasIndex(mp => new { mp.PlaylistId, mp.MusicaId })
             .IsUnique();
 
-        builder.ToTable("MusicaPlaylist");
+        builder.ToTable("PlaylistMusica");
     }
 }

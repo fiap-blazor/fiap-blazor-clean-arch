@@ -29,6 +29,13 @@ public class PlaylistMapeamento : IEntityTypeConfiguration<Playlist>
 
         builder.HasIndex(p => p.UsuarioId);
 
+        builder.HasMany(p => p.PlaylistMusicas)
+            .WithOne(pm => pm.Playlist)
+            .HasForeignKey(pm => pm.PlaylistId);
+
+        builder.Navigation(p => p.PlaylistMusicas)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
         builder.ToTable("Playlist");
     }
 }

@@ -1,7 +1,11 @@
 ﻿@page "/playlist/{Id:int}"
+@using Fiap.BlazorCleanArch.Aplicacao.DTOs.Responses
+@using Fiap.BlazorCleanArch.Aplicacao.Servicos.Interfaces
 @using Microsoft.AspNetCore.Components.Authorization
+@using System.Threading.Tasks
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @inject NavigationManager NavigationManager
+@inject IPlaylistsAppServico _playlistsAppServico
 @rendermode InteractiveServer
 
 <style>
@@ -346,14 +350,7 @@
             <div class="row align-items-end">
                 <div class="col-auto">
                     <div class="playlist-cover">
-                        @if (!string.IsNullOrEmpty(playlist.ImageUrl))
-                        {
-                            <img src="@playlist.ImageUrl" alt="@playlist.Nome" />
-                        }
-                        else
-                        {
-                            <i class="bi bi-music-note-list"></i>
-                        }
+                        <i class="bi bi-music-note-list"></i>
                     </div>
                 </div>
                 <div class="col">
@@ -364,7 +361,7 @@
                         <p class="text-white-50 mb-2">@playlist.Descricao</p>
                     }
                     <p class="text-white-50 mb-0">
-                        <span class="fw-semibold">@playlist.CriadoPor</span> •
+                        @* <span class="fw-semibold">@playlist.CriadoPor</span> • *@
                         <span>@musicas.Count @(musicas.Count == 1 ? "música" : "músicas")</span>
                     </p>
                 </div>
@@ -390,7 +387,7 @@
             </div>
 
             <!-- Lista de Músicas -->
-            @if (musicas.Any())
+            @if (playlist.PlaylistMusicas.Any())
             {
                 <table class="songs-table">
                     <thead>
@@ -406,7 +403,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var (musica, index) in musicas.Select((m, i) => (m, i + 1)))
+                        @foreach (var (musica, index) in playlist.PlaylistMusicas.Select((m, i) => (m, i + 1)))
                         {
                             <tr class="song-row">
                                 <td>
@@ -415,19 +412,19 @@
                                 </td>
                                 <td>
                                     <div class="song-info">
-                                        <img src="@musica.ThumbnailUrl" alt="@musica.Titulo" class="song-thumbnail" />
+                                        <img src="@musica.Musica.AlbumCapaUrl" class="song-thumbnail" />
                                         <div>
-                                            <div class="song-title">@musica.Titulo</div>
-                                            <div class="song-artist">@musica.Artista</div>
+                                            <div class="song-title">@musica.Musica.Nome</div>
+                                            <div class="song-artist">@musica.Musica.ArtistaNome</div>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="song-artist">@musica.Album</td>
-                                <td class="song-duration">@musica.Duracao</td>
+                                <td class="song-artist">@musica.Musica.AlbumNome</td>
+                                <td class="song-duration">@musica.Musica.Duracao</td>
                                 @if (ehDonoPlaylist)
                                 {
                                     <td>
-                                        <button class="btn-remove" @onclick="() => RemoverMusica(musica.Id)">
+                                        <button class="btn-remove" @onclick="() => RemoverMusica(musica.Musica.Id)">
                                             <i class="bi bi-x-lg"></i>
                                         </button>
                                     </td>
@@ -520,7 +517,7 @@
     [CascadingParameter]
     private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
 
-    private PlaylistModel playlist = new();
+    private PlaylistResponse? playlist;
     private List<MusicaModel> musicas = new();
     private List<MusicaModel> musicasDisponiveis = new();
     private bool mostrarModal = false;
@@ -539,8 +536,7 @@
     protected override async Task OnInitializedAsync()
     {
         await ObterUsuarioAtual();
-        CarregarPlaylist();
-        CarregarMusicas();
+        await CarregarPlaylist();
 
         // Verifica se o usuário atual é o dono da playlist
         VerificarPermissoes();
@@ -569,32 +565,12 @@
     {
         // TODO: Comparar com o ID do usuário do backend
         // Por enquanto, compara pelo nome de exibição
-        ehDonoPlaylist = !string.IsNullOrEmpty(usuarioAtual) &&
-                         playlist.CriadoPor == "Você"; // TODO: Substituir por comparação real com userId
+        ehDonoPlaylist = true;// TODO: Substituir por comparação real com userId
     }
 
-    private void CarregarPlaylist()
+    private async Task CarregarPlaylist()
     {
-        // TODO: Carregar do backend
-        playlist = new PlaylistModel
-        {
-            Id = Id,
-            Nome = "Minha Playlist",
-            Descricao = "As melhores músicas selecionadas",
-            CriadoPor = "Você", // TODO: Carregar o nome real do criador
-            ImageUrl = "https://picsum.photos/300/300?random=1"
-        };
-    }
-
-    private void CarregarMusicas()
-    {
-        // TODO: Carregar do backend
-        musicas = new List<MusicaModel>
-        {
-            new() { Id = 1, Titulo = "Bohemian Rhapsody", Artista = "Queen", Album = "A Night at the Opera", Duracao = "5:55", ThumbnailUrl = "https://picsum.photos/40/40?random=1" },
-            new() { Id = 2, Titulo = "Stairway to Heaven", Artista = "Led Zeppelin", Album = "Led Zeppelin IV", Duracao = "8:02", ThumbnailUrl = "https://picsum.photos/40/40?random=2" },
-            new() { Id = 3, Titulo = "Hotel California", Artista = "Eagles", Album = "Hotel California", Duracao = "6:30", ThumbnailUrl = "https://picsum.photos/40/40?random=3" },
-        };
+        playlist = await _playlistsAppServico.ObterPorIdAsync(Id);
     }
 
     private void CarregarMusicasDisponiveis()
@@ -656,15 +632,6 @@
             musicasDisponiveis.Add(musica);
             // TODO: Remover do backend
         }
-    }
-
-    private class PlaylistModel
-    {
-        public int Id { get; set; }
-        public string Nome { get; set; } = string.Empty;
-        public string Descricao { get; set; } = string.Empty;
-        public string CriadoPor { get; set; } = string.Empty;
-        public string ImageUrl { get; set; } = string.Empty;
     }
 
     private class MusicaModel
