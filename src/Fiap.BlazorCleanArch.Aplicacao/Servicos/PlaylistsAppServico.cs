@@ -57,4 +57,52 @@ public class PlaylistsAppServico : IPlaylistsAppServico
             throw;
         }
     }
+
+    public async Task AdicionarMusicaAsync(int playlistId, int musicaId)
+    {
+        try
+        {
+            await _unitOfWork.BeginTransactionAsync();
+
+            var playlist = await _playlistsRepositorio.ObterPorIdEditarAsync(playlistId);
+
+            if(playlist is null)
+                throw new Exception("Playlist não encontrada.");            
+
+            playlist.AdicionarMusica(musicaId);
+
+            await _playlistsRepositorio.AtualizarAsync(playlist);
+
+            await _unitOfWork.CommitAsync();
+        }
+        catch (Exception ex)
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task RemoverMusicaAsync(int playlistId, int musicaId)
+    {
+        try
+        {
+            await _unitOfWork.BeginTransactionAsync();
+
+            var playlist = await _playlistsRepositorio.ObterPorIdEditarAsync(playlistId);
+
+            if (playlist is null)
+                throw new Exception("Playlist não encontrada.");
+
+            playlist.RemoverMusica(musicaId);
+
+            await _playlistsRepositorio.AtualizarAsync(playlist);
+
+            await _unitOfWork.CommitAsync();
+        }
+        catch (Exception ex)
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
+    }
 }

@@ -48,4 +48,25 @@ public class Playlist : Entity
 
         UsuarioId = usuarioId;
     }
+
+    public void AdicionarMusica(int musicaId)
+    {
+        if (_playlistMusicas.Any(pm => pm.MusicaId == musicaId))
+            throw new InvalidOperationException("Esta música já está na playlist.");
+
+        if(_playlistMusicas.Count >= 20)
+            throw new InvalidOperationException("A playlist não pode conter mais de 20 músicas.");
+
+        _playlistMusicas.Add(new PlaylistMusica(musicaId, Id));
+    }
+
+    public void RemoverMusica(int musicaId)
+    {
+        var playlistMusica = _playlistMusicas.FirstOrDefault(pm => pm.MusicaId == musicaId);
+
+        if (playlistMusica is null)
+            throw new InvalidOperationException("A música não está na playlist.");
+
+        _playlistMusicas.Remove(playlistMusica);
+    }
 }

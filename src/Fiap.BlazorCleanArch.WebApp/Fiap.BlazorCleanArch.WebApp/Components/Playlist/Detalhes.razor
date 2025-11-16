@@ -211,6 +211,11 @@
         color: rgba(255, 255, 255, 0.6);
     }
 
+    .song-date {
+        font-size: 0.875rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
     .song-duration {
         color: rgba(255, 255, 255, 0.6);
     }
@@ -398,6 +403,7 @@
                                 <th style="width: 50px;">#</th>
                                 <th>Título</th>
                                 <th>Álbum</th>
+                                <th>Adicionada em</th>
                                 <th style="width: 100px;"><i class="bi bi-clock"></i></th>
                                 @if (ehDonoPlaylist)
                                 {
@@ -423,6 +429,7 @@
                                         </div>
                                     </td>
                                     <td class="song-artist">@musica.Musica.AlbumNome</td>
+                                    <td class="song-date">@musica.DataAdicao</td>
                                     <td class="song-duration">@musica.Musica.Duracao</td>
                                     @if (ehDonoPlaylist)
                                     {
@@ -612,29 +619,28 @@ else
         buscaRealizada = false;
     }
 
-    private void AdicionarMusica(MusicaResponse musica)
+    private async Task AdicionarMusica(MusicaResponse musica)
     {
         if (!ehDonoPlaylist || playlist == null)
         {
             return;
-        }
+        }        
 
-        if (!playlist.PlaylistMusicas.Any(m => m.Musica.Id == musica.Id))
-        {
-            var playlistMusica = new PlaylistMusicaResponse(DateTime.Now, musica);
+        await _playlistsAppServico.AdicionarMusicaAsync(playlist.Id, musica.Id);
 
-            playlist.PlaylistMusicas.Add(playlistMusica);
+        var playlistMusica = new PlaylistMusicaResponse(DateTime.Now, musica);
+        playlist.PlaylistMusicas.Add(playlistMusica);
 
-            // TODO: Adicionar no backend
-        }
     }
 
-    private void RemoverMusica(int musicaId)
+    private async Task RemoverMusica(int musicaId)
     {
         if (!ehDonoPlaylist)
         {
             return;
         }
+
+        await _playlistsAppServico.RemoverMusicaAsync(playlist.Id, musicaId);
 
         var musica = playlist.PlaylistMusicas.FirstOrDefault(m => m.Musica.Id == musicaId);
         if (musica != null)

@@ -59,6 +59,11 @@ public abstract class RepositorioBase<T> : IRepositorioBase<T> where T : Entity,
         await DbSet.AddAsync(entitidade);
     }
 
+    public async Task AtualizarAsync(T entidade)
+    {
+        DbSet.Update(entidade);
+    }
+
     public void Dispose()
     {
         DbContext?.Dispose();

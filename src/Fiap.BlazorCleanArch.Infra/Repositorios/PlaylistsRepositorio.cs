@@ -21,4 +21,14 @@ public class PlaylistsRepositorio : RepositorioBase<Playlist>, IPlaylistsReposit
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.Id == id);
     }
+
+    public async Task<Playlist?> ObterPorIdEditarAsync(int id)
+    {
+        return await DbContext.Playlists
+            .Include(p => p.PlaylistMusicas)           // Carrega a tabela intermediária
+                .ThenInclude(pm => pm.Musica)          // Carrega as Músicas
+                    .ThenInclude(m => m.Album)         // Carrega o Álbum
+                        .ThenInclude(a => a.Artista)   // Carrega o Artista
+            .FirstOrDefaultAsync(p => p.Id == id);
+    }
 }

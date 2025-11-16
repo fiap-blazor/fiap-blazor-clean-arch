@@ -12,9 +12,7 @@ public class PlaylistMusica : Entity
 
     public DateTime DataAdicao { get; protected set; }
 
-
     public PlaylistMusica() { }
-
 
     public PlaylistMusica(int musicaId, int playlistId)
     {
