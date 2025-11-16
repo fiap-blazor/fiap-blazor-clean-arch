@@ -557,8 +557,6 @@ else
     {
         await ObterUsuarioAtual();
         await CarregarPlaylist();
-
-        VerificarPermissoes();
     }
 
     private async Task ObterUsuarioAtual()
@@ -575,13 +573,6 @@ else
         }
     }
 
-    private void VerificarPermissoes()
-    {
-        // TODO: Comparar com o ID do usuário do backend
-        // Por enquanto, compara pelo nome de exibição
-        ehDonoPlaylist = true;
-    }
-
     private async Task CarregarPlaylist()
     {
         playlist = await _playlistsAppServico.ObterPorIdAsync(Id);
@@ -593,11 +584,10 @@ else
         {
             buscaRealizada = false;
             return;
-        }
-
-        buscaRealizada = true;
-
+        }        
+       
         resultadosBusca = await _musicasAppServico.ListarAsync(new Aplicacao.DTOs.Requests.MusicaListarRequest { Nome = termoBusca });
+        buscaRealizada = true;        
     }
 
     private void AbrirModalAdicionarMusica()
