@@ -1,0 +1,83 @@
+﻿@using System
+@using Microsoft.AspNetCore.Components
+
+@if (TotalPages > 1)
+{
+    <nav>
+        <ul class="pagination">
+            <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
+                <button class="page-link" @onclick="() => GoToPage(CurrentPage - 1)" aria-label="Anterior">Anterior</button>
+            </li>
+
+            @if (StartPage > 1)
+            {
+                <li class="page-item">
+                    <button class="page-link" @onclick="() => GoToPage(1)">1</button>
+                </li>
+                @if (StartPage > 2)
+                {
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                }
+            }
+
+            @for (int p = StartPage; p <= EndPage; p++)
+            {
+                <li class="page-item @(p == CurrentPage ? "active" : "")" aria-current="@(p == CurrentPage ? "page" : null)">
+                    <button class="page-link" @onclick="() => GoToPage(p)">@p</button>
+                </li>
+            }
+
+            @if (EndPage < TotalPages)
+            {
+                @if (EndPage < TotalPages - 1)
+                {
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                }
+                <li class="page-item">
+                    <button class="page-link" @onclick="() => GoToPage(TotalPages)">@TotalPages</button>
+                </li>
+            }
+
+            <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
+                <button class="page-link" @onclick="() => GoToPage(CurrentPage + 1)" aria-label="Próximo">Próximo</button>
+            </li>
+        </ul>
+    </nav>
+}
+
+@code {
+    [Parameter] public long Total { get; set; }
+    [Parameter] public int PageSize { get; set; } = 10;
+    [Parameter] public int CurrentPage { get; set; } = 1;
+    [Parameter] public EventCallback<int> CurrentPageChanged { get; set; }
+    [Parameter] public EventCallback<int> OnPageChanged { get; set; }
+    [Parameter] public int MaxPagesToShow { get; set; } = 1;
+
+    private int TotalPages => PageSize <= 0 ? 0 : (int)Math.Ceiling((double)Total / PageSize);
+
+    private int StartPage
+    {
+        get
+        {
+            if (TotalPages <= MaxPagesToShow) return 1;
+            int half = MaxPagesToShow / 2;
+            int start = CurrentPage - half;
+            if (start < 1) start = 1;
+            if (start + MaxPagesToShow - 1 > TotalPages) start = TotalPages - MaxPagesToShow + 1;
+            return start;
+        }
+    }
+
+    private int EndPage => Math.Min(TotalPages, StartPage + MaxPagesToShow - 1);
+
+    private async Task GoToPage(int page)
+    {
+        if (page < 1) page = 1;
+        if (page > TotalPages) page = TotalPages;
+        if (page == CurrentPage) return;
+
+        CurrentPage = page;
+        await CurrentPageChanged.InvokeAsync(page);
+        await OnPageChanged.InvokeAsync(page);
+    }
+}
