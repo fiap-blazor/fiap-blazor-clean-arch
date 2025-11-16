@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
+using Fiap.BlazorCleanArch.Aplicacao.DTOs;
 using Fiap.BlazorCleanArch.Aplicacao.DTOs.Responses;
 using Fiap.BlazorCleanArch.Dominio.Entidades;
+using Fiap.BlazorCleanArch.Dominio.Modelos;
 
 namespace Fiap.BlazorCleanArch.Aplicacao.Profiles;
 
@@ -15,5 +17,7 @@ public class MusicaProfile : Profile
             .ForCtorParam("AlbumNome", opt => opt.MapFrom(src => src.Album.Nome))
             .ForCtorParam("AlbumCapaUrl", opt => opt.MapFrom(src => src.Album.CapaUrl))
             .ForCtorParam("ArtistaNome", opt => opt.MapFrom(src => src.Album.Artista.Nome));
+
+        CreateMap<PaginacaoConsulta<Musica>, PaginacaoConsulta<MusicaResponse>>();
     }
 }

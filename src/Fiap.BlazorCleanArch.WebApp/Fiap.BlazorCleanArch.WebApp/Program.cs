@@ -53,6 +53,9 @@ builder.Services.AddScoped<IUsuarioAutenticadoServico, UsuarioAutenticadoServico
 builder.Services.AddScoped<IPlaylistsAppServico, PlaylistsAppServico>();
 builder.Services.AddScoped<IPlaylistsRepositorio, PlaylistsRepositorio>();
 
+builder.Services.AddScoped<IMusicasRepositorio, MusicasRepositorio>();
+builder.Services.AddScoped<IMusicasAppServico, MusicasAppServico>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

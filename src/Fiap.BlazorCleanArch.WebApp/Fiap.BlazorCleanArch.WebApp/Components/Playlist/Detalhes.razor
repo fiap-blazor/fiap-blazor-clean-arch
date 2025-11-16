@@ -1,11 +1,14 @@
 ﻿@page "/playlist/{Id:int}"
+@using Fiap.BlazorCleanArch.Aplicacao.DTOs
 @using Fiap.BlazorCleanArch.Aplicacao.DTOs.Responses
 @using Fiap.BlazorCleanArch.Aplicacao.Servicos.Interfaces
+@using Fiap.BlazorCleanArch.Dominio.Modelos
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Threading.Tasks
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @inject NavigationManager NavigationManager
 @inject IPlaylistsAppServico _playlistsAppServico
+@inject IMusicasAppServico _musicasAppServico
 @rendermode InteractiveServer
 
 <style>
@@ -64,7 +67,6 @@
             background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
 
     .playlist-content {
@@ -235,7 +237,6 @@
             background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
             margin-bottom: 1.5rem;
         }
 
@@ -337,176 +338,196 @@
         }
 </style>
 
-<PageTitle>@playlist.Nome - Fiapfy</PageTitle>
+@if (playlist != null)
+{
+    <PageTitle>@playlist.Nome - Fiapfy</PageTitle>
 
-<div class="playlist-page">
-    <!-- Header -->
-    <div class="playlist-header">
-        <div class="container-fluid px-5 py-5 header-content">
-            <a href="/biblioteca" class="back-button">
-                <i class="bi bi-arrow-left"></i>
-                <span>Voltar para Biblioteca</span>
-            </a>
-            <div class="row align-items-end">
-                <div class="col-auto">
-                    <div class="playlist-cover">
-                        <i class="bi bi-music-note-list"></i>
+    <div class="playlist-page">
+        <!-- Header -->
+        <div class="playlist-header">
+            <div class="container-fluid px-5 py-5 header-content">
+                <a href="/biblioteca" class="back-button">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>Voltar para Biblioteca</span>
+                </a>
+                <div class="row align-items-end">
+                    <div class="col-auto">
+                        <div class="playlist-cover">
+                            <i class="bi bi-music-note-list"></i>
+                        </div>
                     </div>
-                </div>
-                <div class="col">
-                    <p class="text-white-50 mb-2 small text-uppercase fw-semibold">Playlist</p>
-                    <h1 class="display-3 fw-bold text-white mb-3">@playlist.Nome</h1>
-                    @if (!string.IsNullOrEmpty(playlist.Descricao))
-                    {
-                        <p class="text-white-50 mb-2">@playlist.Descricao</p>
-                    }
-                    <p class="text-white-50 mb-0">
-                        @* <span class="fw-semibold">@playlist.CriadoPor</span> • *@
-                        <span>@musicas.Count @(musicas.Count == 1 ? "música" : "músicas")</span>
-                    </p>
+                    <div class="col">
+                        <p class="text-white-50 mb-2 small text-uppercase fw-semibold">Playlist</p>
+                        <h1 class="display-3 fw-bold text-white mb-3">@playlist.Nome</h1>
+                        @if (!string.IsNullOrEmpty(playlist.Descricao))
+                        {
+                            <p class="text-white-50 mb-2">@playlist.Descricao</p>
+                        }
+                        <p class="text-white-50 mb-0">
+                            @* <span class="fw-semibold">@playlist.CriadoPor</span> • *@
+                            @* <span>@musicas.Count @(musicas.Count == 1 ? "música" : "músicas")</span> *@
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Conteúdo -->
-    <div class="playlist-content">
-        <div class="container-fluid px-5">
-            <!-- Barra de Ações -->
-            <div class="action-bar">
-                <button class="btn-play" disabled="@(!musicas.Any())">
-                    <i class="bi bi-play-fill text-white"></i>
-                </button>
-                @if (ehDonoPlaylist)
-                {
-                    <button class="btn btn-add-song" @onclick="AbrirModalAdicionarMusica">
-                        <i class="bi bi-plus-lg me-2"></i>
-                        Adicionar músicas
+        <!-- Conteúdo -->
+        <div class="playlist-content">
+            <div class="container-fluid px-5">
+                <!-- Barra de Ações -->
+                <div class="action-bar">
+                    <button class="btn-play" disabled="@(!playlist.PlaylistMusicas.Any())">
+                        <i class="bi bi-play-fill text-white"></i>
                     </button>
-                }
-            </div>
-
-            <!-- Lista de Músicas -->
-            @if (playlist.PlaylistMusicas.Any())
-            {
-                <table class="songs-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 50px;">#</th>
-                            <th>Título</th>
-                            <th>Álbum</th>
-                            <th style="width: 100px;"><i class="bi bi-clock"></i></th>
-                            @if (ehDonoPlaylist)
-                            {
-                                <th style="width: 50px;"></th>
-                            }
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var (musica, index) in playlist.PlaylistMusicas.Select((m, i) => (m, i + 1)))
-                        {
-                            <tr class="song-row">
-                                <td>
-                                    <span class="song-number">@index</span>
-                                    <i class="bi bi-play-fill play-icon"></i>
-                                </td>
-                                <td>
-                                    <div class="song-info">
-                                        <img src="@musica.Musica.AlbumCapaUrl" class="song-thumbnail" />
-                                        <div>
-                                            <div class="song-title">@musica.Musica.Nome</div>
-                                            <div class="song-artist">@musica.Musica.ArtistaNome</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="song-artist">@musica.Musica.AlbumNome</td>
-                                <td class="song-duration">@musica.Musica.Duracao</td>
-                                @if (ehDonoPlaylist)
-                                {
-                                    <td>
-                                        <button class="btn-remove" @onclick="() => RemoverMusica(musica.Musica.Id)">
-                                            <i class="bi bi-x-lg"></i>
-                                        </button>
-                                    </td>
-                                }
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-            else
-            {
-                <div class="empty-state">
-                    <i class="bi bi-music-note-beamed d-block"></i>
-                    <h3>Nenhuma música adicionada</h3>
                     @if (ehDonoPlaylist)
                     {
-                        <p class="mb-4">Comece adicionando músicas à sua playlist</p>
-                        <button class="btn btn-primary btn-lg rounded-pill px-5" @onclick="AbrirModalAdicionarMusica">
-                            <i class="bi bi-plus-lg me-2"></i>Adicionar músicas
+                        <button class="btn btn-add-song" @onclick="AbrirModalAdicionarMusica">
+                            <i class="bi bi-plus-lg me-2"></i>
+                            Adicionar músicas
                         </button>
                     }
-                    else
-                    {
-                        <p class="mb-4">Esta playlist ainda não possui músicas</p>
-                    }
                 </div>
-            }
-        </div>
-    </div>
-</div>
 
-<!-- Modal Adicionar Música -->
-@if (mostrarModal && ehDonoPlaylist)
-{
-    <div class="modal fade show d-block modal-dark" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.8);">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold">Adicionar Músicas à Playlist</h5>
-                    <button type="button" class="btn-close" @onclick="FecharModal"></button>
-                </div>
-                <div class="modal-body">
-                    <!-- Busca -->
-                    <div class="mb-4">
-                        <input type="text"
-                               class="form-control form-control-lg search-box"
-                               placeholder="Buscar músicas, artistas ou álbuns..."
-                               @bind="termoBusca"
-                               @bind:event="oninput" />
-                    </div>
-
-                    <!-- Resultados da Busca -->
-                    <div style="max-height: 400px; overflow-y: auto;">
-                        @if (musicasFiltradas.Any())
-                        {
-                            @foreach (var musica in musicasFiltradas)
+                <!-- Lista de Músicas -->
+                @if (playlist.PlaylistMusicas.Any())
+                {
+                    <table class="songs-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th>Título</th>
+                                <th>Álbum</th>
+                                <th style="width: 100px;"><i class="bi bi-clock"></i></th>
+                                @if (ehDonoPlaylist)
+                                {
+                                    <th style="width: 50px;"></th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var (musica, index) in playlist.PlaylistMusicas.Select((m, i) => (m, i + 1)))
                             {
-                                <div class="search-result d-flex align-items-center justify-content-between">
-                                    <div class="song-info flex-grow-1">
-                                        <img src="@musica.ThumbnailUrl" alt="@musica.Titulo" class="song-thumbnail" />
-                                        <div>
-                                            <div class="song-title">@musica.Titulo</div>
-                                            <div class="song-artist">@musica.Artista • @musica.Album</div>
+                                <tr class="song-row">
+                                    <td>
+                                        <span class="song-number">@index</span>
+                                        <i class="bi bi-play-fill play-icon"></i>
+                                    </td>
+                                    <td>
+                                        <div class="song-info">
+                                            <img src="@musica.Musica.AlbumCapaUrl" class="song-thumbnail" />
+                                            <div>
+                                                <div class="song-title">@musica.Musica.Nome</div>
+                                                <div class="song-artist">@musica.Musica.ArtistaNome</div>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <button class="btn btn-add-to-playlist" @onclick="() => AdicionarMusica(musica)">
-                                        <i class="bi bi-plus-lg me-1"></i> Adicionar
-                                    </button>
-                                </div>
+                                    </td>
+                                    <td class="song-artist">@musica.Musica.AlbumNome</td>
+                                    <td class="song-duration">@musica.Musica.Duracao</td>
+                                    @if (ehDonoPlaylist)
+                                    {
+                                        <td>
+                                            <button class="btn-remove" @onclick="() => RemoverMusica(musica.Musica.Id)">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </td>
+                                    }
+                                </tr>
                             }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <i class="bi bi-music-note-beamed d-block"></i>
+                        <h3>Nenhuma música adicionada</h3>
+                        @if (ehDonoPlaylist)
+                        {
+                            <p class="mb-4">Comece adicionando músicas à sua playlist</p>
+                            <button class="btn btn-primary btn-lg rounded-pill px-5" @onclick="AbrirModalAdicionarMusica">
+                                <i class="bi bi-plus-lg me-2"></i>Adicionar músicas
+                            </button>
                         }
                         else
                         {
-                            <div class="text-center text-white-50 py-5">
-                                <i class="bi bi-search fs-1 mb-3 d-block"></i>
-                                <p>@(string.IsNullOrWhiteSpace(termoBusca) ? "Digite para buscar músicas" : "Nenhuma música encontrada")</p>
-                            </div>
+                            <p class="mb-4">Esta playlist ainda não possui músicas</p>
                         }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar Música -->
+    @if (mostrarModal && ehDonoPlaylist)
+    {
+        <div class="modal fade show d-block modal-dark" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.8);">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">Adicionar Músicas à Playlist</h5>
+                        <button type="button" class="btn-close" @onclick="FecharModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Busca -->
+                        <div class="mb-4">
+                            <input type="text"
+                                   class="form-control form-control-lg search-box"
+                                   placeholder="Buscar músicas, artistas ou álbuns..."
+                                   @bind="termoBusca"
+                                   @bind:event="oninput"
+                                   @bind:after="RealizarBusca" />
+                        </div>
+
+                        <!-- Resultados da Busca -->
+                        <div style="max-height: 400px; overflow-y: auto;">
+                            @if (buscaRealizada)
+                            {
+                                @if (resultadosBusca.Registros.Any())
+                                {
+                                    @foreach (var musica in resultadosBusca.Registros)
+                                    {
+                                        <div class="search-result d-flex align-items-center justify-content-between">
+                                            <div class="song-info flex-grow-1">
+                                                <img src="@musica.AlbumCapaUrl" class="song-thumbnail" />
+                                                <div>
+                                                    <div class="song-title">@musica.Nome</div>
+                                                    <div class="song-artist">@musica.ArtistaNome • @musica.AlbumNome</div>
+                                                </div>
+                                            </div>
+                                            <button class="btn btn-add-to-playlist" @onclick="() => AdicionarMusica(musica)">
+                                                <i class="bi bi-plus-lg me-1"></i> Adicionar
+                                            </button>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="text-center text-white-50 py-5">
+                                        <i class="bi bi-search fs-1 mb-3 d-block"></i>
+                                        <p>Nenhuma música encontrada</p>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="text-center text-white-50 py-5">
+                                    <i class="bi bi-search fs-1 mb-3 d-block"></i>
+                                    <p>Digite para buscar músicas</p>
+                                </div>
+                            }
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+    }
+}
+else
+{
+    <div class="text-center text-white py-5">
+        <p>Carregando playlist...</p>
     </div>
 }
 
@@ -518,33 +539,19 @@
     private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
 
     private PlaylistResponse? playlist;
-    private List<MusicaModel> musicas = new();
-    private List<MusicaModel> musicasDisponiveis = new();
+    private PaginacaoConsulta<MusicaResponse> resultadosBusca = new();
     private bool mostrarModal = false;
     private string termoBusca = string.Empty;
     private string? usuarioAtual;
     private bool ehDonoPlaylist = true;
-
-    private IEnumerable<MusicaModel> musicasFiltradas =>
-        string.IsNullOrWhiteSpace(termoBusca)
-            ? musicasDisponiveis
-            : musicasDisponiveis.Where(m =>
-                m.Titulo.Contains(termoBusca, StringComparison.OrdinalIgnoreCase) ||
-                m.Artista.Contains(termoBusca, StringComparison.OrdinalIgnoreCase) ||
-                m.Album.Contains(termoBusca, StringComparison.OrdinalIgnoreCase));
+    private bool buscaRealizada = false;
 
     protected override async Task OnInitializedAsync()
     {
         await ObterUsuarioAtual();
         await CarregarPlaylist();
 
-        // Verifica se o usuário atual é o dono da playlist
         VerificarPermissoes();
-
-        if (ehDonoPlaylist)
-        {
-            CarregarMusicasDisponiveis();
-        }
     }
 
     private async Task ObterUsuarioAtual()
@@ -565,7 +572,7 @@
     {
         // TODO: Comparar com o ID do usuário do backend
         // Por enquanto, compara pelo nome de exibição
-        ehDonoPlaylist = true;// TODO: Substituir por comparação real com userId
+        ehDonoPlaylist = true;
     }
 
     private async Task CarregarPlaylist()
@@ -573,17 +580,17 @@
         playlist = await _playlistsAppServico.ObterPorIdAsync(Id);
     }
 
-    private void CarregarMusicasDisponiveis()
+    private async Task RealizarBusca()
     {
-        // TODO: Carregar do backend
-        musicasDisponiveis = new List<MusicaModel>
+        if (string.IsNullOrWhiteSpace(termoBusca))
         {
-            new() { Id = 4, Titulo = "Sweet Child O' Mine", Artista = "Guns N' Roses", Album = "Appetite for Destruction", Duracao = "5:56", ThumbnailUrl = "https://picsum.photos/40/40?random=4" },
-            new() { Id = 5, Titulo = "Smells Like Teen Spirit", Artista = "Nirvana", Album = "Nevermind", Duracao = "5:01", ThumbnailUrl = "https://picsum.photos/40/40?random=5" },
-            new() { Id = 6, Titulo = "Back in Black", Artista = "AC/DC", Album = "Back in Black", Duracao = "4:15", ThumbnailUrl = "https://picsum.photos/40/40?random=6" },
-            new() { Id = 7, Titulo = "Imagine", Artista = "John Lennon", Album = "Imagine", Duracao = "3:03", ThumbnailUrl = "https://picsum.photos/40/40?random=7" },
-            new() { Id = 8, Titulo = "Billie Jean", Artista = "Michael Jackson", Album = "Thriller", Duracao = "4:54", ThumbnailUrl = "https://picsum.photos/40/40?random=8" },
-        };
+            buscaRealizada = false;
+            return;
+        }
+
+        buscaRealizada = true;
+
+        resultadosBusca = await _musicasAppServico.ListarAsync(new Aplicacao.DTOs.Requests.MusicaListarRequest { Nome = termoBusca });
     }
 
     private void AbrirModalAdicionarMusica()
@@ -594,6 +601,7 @@
         }
 
         termoBusca = string.Empty;
+        buscaRealizada = false;
         mostrarModal = true;
     }
 
@@ -601,20 +609,23 @@
     {
         mostrarModal = false;
         termoBusca = string.Empty;
+        buscaRealizada = false;
     }
 
-    private void AdicionarMusica(MusicaModel musica)
+    private void AdicionarMusica(MusicaResponse musica)
     {
-        if (!ehDonoPlaylist)
+        if (!ehDonoPlaylist || playlist == null)
         {
             return;
         }
 
-        if (!musicas.Any(m => m.Id == musica.Id))
+        if (!playlist.PlaylistMusicas.Any(m => m.Musica.Id == musica.Id))
         {
-            musicas.Add(musica);
-            musicasDisponiveis.Remove(musica);
-            // TODO: Salvar no backend
+            var playlistMusica = new PlaylistMusicaResponse(DateTime.Now, musica);
+
+            playlist.PlaylistMusicas.Add(playlistMusica);
+
+            // TODO: Adicionar no backend
         }
     }
 
@@ -625,22 +636,11 @@
             return;
         }
 
-        var musica = musicas.FirstOrDefault(m => m.Id == musicaId);
+        var musica = playlist.PlaylistMusicas.FirstOrDefault(m => m.Musica.Id == musicaId);
         if (musica != null)
         {
-            musicas.Remove(musica);
-            musicasDisponiveis.Add(musica);
+            playlist.PlaylistMusicas.Remove(musica);
             // TODO: Remover do backend
         }
-    }
-
-    private class MusicaModel
-    {
-        public int Id { get; set; }
-        public string Titulo { get; set; } = string.Empty;
-        public string Artista { get; set; } = string.Empty;
-        public string Album { get; set; } = string.Empty;
-        public string Duracao { get; set; } = string.Empty;
-        public string ThumbnailUrl { get; set; } = string.Empty;
     }
 }
