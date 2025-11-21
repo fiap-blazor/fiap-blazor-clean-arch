@@ -272,7 +272,8 @@ else
         }
     }
 
-    private async Task CarregarPlaylist() => playlist = await PlaylistsAppServico.ObterPorIdAsync(Id);
+    private async Task CarregarPlaylist() 
+        => playlist = await PlaylistsAppServico.ObterPorIdAsync(Id);
 
     private async Task RealizarBusca()
     {
