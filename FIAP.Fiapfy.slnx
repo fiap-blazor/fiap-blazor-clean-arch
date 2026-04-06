@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FIAP.Fiapfy.Aplicacao/FIAP.Fiapfy.Aplicacao.csproj" />
+    <Project Path="src/FIAP.Fiapfy.Dominio/FIAP.Fiapfy.Dominio.csproj" />
+    <Project Path="src/FIAP.Fiapfy.Infra/FIAP.Fiapfy.Infra.csproj" />
+  </Folder>
+  <Folder Name="/src/Web/">
+    <Project Path="src/FIAP.Fiapfy.WebApp/FIAP.Fiapfy.WebApp.Client/FIAP.Fiapfy.WebApp.Client.csproj" />
+    <Project Path="src/FIAP.Fiapfy.WebApp/FIAP.Fiapfy.WebApp/FIAP.Fiapfy.WebApp.csproj" />
+  </Folder>
+</Solution>
