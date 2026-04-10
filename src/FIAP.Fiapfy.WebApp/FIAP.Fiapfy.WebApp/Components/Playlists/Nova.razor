@@ -1,0 +1,144 @@
+﻿@page "/playlist/nova"
+
+@attribute [Authorize]
+
+@inject NavigationManager NavigationManager
+@inject IUsuarioAutenticadoServico _usuarioAutenticadoServico
+@inject IPlaylistsAppServico _playlistsAppServico
+
+@rendermode InteractiveServer
+
+<PageTitle>Criar Playlist | Fiapfy</PageTitle>
+
+<div class="create-playlist-page">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="container-fluid px-5 py-4 header-content">
+            <a href="/biblioteca" class="back-button mb-3">
+                <i class="bi bi-arrow-left"></i>
+                <span>Voltar para Biblioteca</span>
+            </a>
+            <h1 class="section-title mb-2">Criar Nova Playlist</h1>
+            <p class="text-white-50">Personalize sua playlist com nome, descrição e capa</p>
+        </div>
+    </div>
+
+    <!-- Conteúdo -->
+    <div class="page-content">
+        <div class="container-fluid px-5 py-5">
+
+            @if (!string.IsNullOrEmpty(mensagemErro))
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-circle me-2"></i>
+                    <strong>Erro!</strong> @mensagemErro
+                    <button type="button" class="btn-close" @onclick="@(() => mensagemErro = string.Empty)"></button>
+                </div>
+            }
+
+            <div class="form-card">
+                <EditForm Model="@Model" OnValidSubmit="@SalvarPlaylist">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="row g-4">
+                        <!-- Coluna da Capa -->
+                        <div class="col-md-4">
+                            <label class="form-label">Imagem da Capa</label>
+                            <div class="cover-upload-area">
+                                <div class="upload-placeholder">
+                                    <i class="bi bi-image d-block"></i>
+                                    <p class="text-white mb-2 fw-semibold">Adicionar capa</p>
+                                    <p class="text-white-50 mb-0 small">Clique para fazer upload</p>
+                                </div>
+                            </div>
+                            <p class="info-text mt-2">
+                                Recomendado: 300x300px ou maior, JPG ou PNG
+                            </p>
+                        </div>
+
+                        <!-- Coluna do Formulário -->
+                        <div class="col-md-8">
+                            <!-- Nome -->
+                            <div class="mb-4">
+                                <label for="nome" class="form-label">
+                                    Nome da Playlist <span class="text-danger">*</span>
+                                </label>
+                                <InputText id="nome"
+                                           class="form-control form-control-lg"
+                                           @bind-Value="Model.Nome"
+                                           placeholder="Minha Playlist Incrível"
+                                           maxlength="100" />
+                            </div>
+
+                            <!-- Descrição -->
+                            <div class="mb-4">
+                                <label for="descricao" class="form-label">Descrição</label>
+                                <InputTextArea id="descricao"
+                                               class="form-control"
+                                               @bind-Value="Model.Descricao"
+                                               placeholder="Adicione uma descrição opcional para sua playlist..."
+                                               rows="4"
+                                               maxlength="300" />
+                            </div>
+
+                            <!-- Botões de Ação -->
+                            <div class="d-flex gap-3 mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg px-5 fw-semibold" disabled="@salvando">
+                                    @if (salvando)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                        <span>Criando...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-plus-circle me-2"></i>
+                                        <span>Criar Playlist</span>
+                                    }
+                                </button>
+                                <a href="/biblioteca" class="btn btn-secondary btn-lg px-5 fw-semibold">
+                                    Cancelar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private PlaylistInserirRequest Model = new();
+    private bool salvando = false;
+    private string usuarioId = string.Empty;
+    private string mensagemErro = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        usuarioId = await _usuarioAutenticadoServico.ObterIdUsuarioAsync();
+    }
+
+    private async Task SalvarPlaylist()
+    {
+        salvando = true;
+        mensagemErro = string.Empty;
+
+        try
+        {
+            await Task.Delay(3000);
+
+            var playlistId = await _playlistsAppServico.InserirAsync(Model, usuarioId);
+            NavigationManager.NavigateTo($"/playlist/{playlistId}");
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = "Não foi possível criar a playlist. Tente novamente.";
+            Console.Error.WriteLine($"Erro ao criar playlist: {ex.Message}");
+        }
+        finally
+        {
+            salvando = false;
+        }
+    }
+}

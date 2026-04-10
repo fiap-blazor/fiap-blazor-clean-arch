@@ -1,0 +1,127 @@
+﻿@page "/biblioteca"
+
+@attribute [Authorize]
+@attribute [StreamRendering]
+
+@inject NavigationManager NavigationManager
+@inject IUsuarioAutenticadoServico _usuarioAutenticadoServico
+@inject IPlaylistsAppServico _playlistsAppServico
+
+@rendermode InteractiveServer
+
+<PageTitle>Minha Biblioteca | Fiapfy</PageTitle>
+
+<div class="library-page">
+    <!-- Header -->
+    <div class="library-header">
+        <div class="container-fluid px-5 py-5 header-content">
+            <div class="row align-items-end">
+                <div class="col-auto">
+                    <img src="@GravatarHelper.ObterGravatarUrl(@usuarioEmail, 400)" class="profile-image" />
+                </div>
+                <div class="col">
+                    <p class="text-white-50 mb-2 small text-uppercase fw-semibold">Biblioteca</p>
+                    <h1 class="display-3 fw-bold text-white mb-3">@usuarioNome</h1>
+                    <p class="text-white-50 mb-0">
+                        <span class="fw-semibold">@quantidadePlaylists</span> @(quantidadePlaylists == 1 ? "playlist" : "playlists")
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conteúdo principal -->
+    <div class="library-content">
+        <div class="container-fluid px-5 py-4">
+            @if (Playlists is null)
+            {
+                <div class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                        <h5 class="text-white-50 mt-2">Carregando sua biblioteca...</h5>
+                        <p class="text-white-50 small">Aguarde um momento</p>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-6 g-4">
+                    <!-- Card de Criar Nova Playlist -->
+                    <div class="col">
+                        <div class="create-playlist-card rounded-3 p-4 d-flex flex-column align-items-center justify-content-center h-100"
+                             @onclick='() => NavigationManager.NavigateTo("/playlist/nova")'>
+                            <div class="create-icon">
+                                <i class="bi bi-plus-lg"></i>
+                            </div>
+                            <h3 class="h5 text-white fw-bold mb-2">Criar Playlist</h3>
+                            <p class="small text-white-50 mb-0 text-center">Crie uma nova coleção de músicas</p>
+                        </div>
+                    </div>
+
+                    <!-- Playlists do Usuário -->
+                    @foreach (var playlist in Playlists)
+                    {
+                        <div class="col">
+                            <div class="playlist-card rounded-3 p-3 h-100 d-flex flex-column"
+                                 @onclick="() => AbrirPlaylist(playlist.Id)">
+                                <div class="playlist-cover mb-3 position-relative rounded-2">
+                                    <div class="placeholder-icon">
+                                        <i class="bi bi-music-note-list"></i>
+                                    </div>
+                                    <div class="play-button position-absolute bottom-0 end-0 m-3 opacity-0">
+                                        <button class="btn rounded-circle shadow">
+                                            <i class="bi bi-play-fill"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="playlist-info">
+                                    <div>
+                                        <h3 class="h6 text-white fw-semibold mb-1 text-truncate">@playlist.Nome</h3>
+                                        <p class="small text-white-50 mb-2">@playlist.Descricao</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    public IReadOnlyList<PlaylistListarResponse>? Playlists { get; private set; }
+
+    public int quantidadePlaylists = 0;
+    private string usuarioId = string.Empty;
+    private string usuarioNome = string.Empty;
+    private string usuarioEmail = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var usuarioIdTask = _usuarioAutenticadoServico.ObterIdUsuarioAsync();
+        var usuarioNomeTask = _usuarioAutenticadoServico.ObterNomeUsuarioAsync();
+        var usuarioEmailTask = _usuarioAutenticadoServico.ObterEmailUsuarioAsync();
+
+        await Task.WhenAll(usuarioIdTask, usuarioNomeTask, usuarioEmailTask);
+
+        usuarioId = usuarioIdTask.Result;
+        usuarioNome = usuarioNomeTask.Result;
+        usuarioEmail = usuarioEmailTask.Result;
+
+        await CarregarPlaylists();
+    }
+
+    private async Task CarregarPlaylists()
+    {
+        Playlists = await _playlistsAppServico.ListarPorUsuarioAsync(usuarioId);
+        quantidadePlaylists = Playlists.Count;
+    }
+
+    private void AbrirPlaylist(int playlistId)
+    {
+        NavigationManager.NavigateTo($"/playlist/{playlistId}");
+    }
+}
