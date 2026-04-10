@@ -9,6 +9,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\..\FIAP.Fiapfy.Aplicacao\FIAP.Fiapfy.Aplicacao.csproj" />
+		<ProjectReference Include="..\..\FIAP.Fiapfy.Dominio\FIAP.Fiapfy.Dominio.csproj" />
 		<ProjectReference Include="..\..\FIAP.Fiapfy.Infra\FIAP.Fiapfy.Infra.csproj" />
 		<ProjectReference Include="..\FIAP.Fiapfy.WebApp.Client\FIAP.Fiapfy.WebApp.Client.csproj" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.5" />

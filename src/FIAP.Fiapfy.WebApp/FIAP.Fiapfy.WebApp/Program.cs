@@ -1,6 +1,7 @@
 using FIAP.Fiapfy.WebApp.Client.Pages;
 using FIAP.Fiapfy.WebApp.Components;
 using FIAP.Fiapfy.WebApp.Components.Account;
+using FIAP.Fiapfy.WebApp.Configuracoes;
 using FIAP.Fiapfy.WebApp.Data;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -13,6 +14,8 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents()
     .AddAuthenticationStateSerialization();
+
+builder.Services.RegistrarServicos();
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityRedirectManager>();
