@@ -1,7 +1,181 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Fiapfy - Música para todos</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="home-page">
+    <div class="hero-section">
+        <div class="container-fluid px-5 py-5 hero-content">
+            <AuthorizeView>
+                <Authorized>
+                    <div class="row align-items-center">
+                        <div class="col-lg-8">
+                            <h1 class="display-2 fw-bold text-white mb-4">
+                                Bem-vindo de volta, <span class="text-gradient">@ObterPrimeiroNome(context.User.Identity?.Name)</span>
+                            </h1>
+                            <p class="lead mb-4" style="color: rgba(255, 255, 255, 0.8);">
+                                Continue ouvindo suas músicas favoritas de onde parou
+                            </p>
+                        </div>
+                    </div>
+                </Authorized>
+                <NotAuthorized>
+                    <div class="row align-items-center">
+                        <div class="col-lg-6">
+                            <h1 class="display-1 fw-bold text-white mb-4">
+                                Milhões de músicas.<br />
+                                <span class="text-gradient">Grátis no Fiapfy.</span>
+                            </h1>
+                            <p class="lead mb-4" style="color: rgba(255, 255, 255, 0.8);">
+                                Crie playlists, descubra novos artistas e ouça suas músicas favoritas
+                            </p>
+                            <div class="d-flex gap-3 flex-wrap">
+                                <a href="Account/Register" class="btn btn-primary btn-lg rounded-pill px-5 fw-semibold">
+                                    <i class="bi bi-person-plus me-2"></i>Criar Conta Grátis
+                                </a>
+                                <a href="Account/Login" class="btn btn-outline-light btn-lg rounded-pill px-5 fw-semibold">
+                                    Entrar
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 d-none d-lg-block">
+                            <div class="hero-image">
+                                <i class="bi bi-music-note-beamed"></i>
+                            </div>
+                        </div>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+    </div>
 
-Welcome to your new app.
+    <!-- Main Content -->
+    <div class="home-content">
+        <div class="container-fluid px-5 py-5">
+            <AuthorizeView>
+                <Authorized>
+                    <!-- Tocadas Recentemente -->
+                    <section class="mb-5">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2 class="section-title">Tocadas recentemente</h2>
+                            <a href="#" class="section-link">Ver todas</a>
+                        </div>
+                        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+                            @foreach (var item in playlistsRecentementeTocadas)
+                            {
+                                <div class="col">
+                                    <div class="recent-card bg-body-secondary rounded-3 p-2 d-flex align-items-center">
+                                        <img src="@item.ImageUrl" alt="@item.Nome" class="recent-thumb rounded me-3" />
+                                        <span class="text-white fw-semibold flex-grow-1 text-truncate">@item.Nome</span>
+                                        <div class="play-overlay">
+                                            <button class="btn btn-success rounded-circle shadow">
+                                                <i class="bi bi-play-fill"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            
+                        </div>
+                    </section>
+                </Authorized>
+                <NotAuthorized>
+                    <!-- Recursos para não autenticados -->
+                    <section class="mb-5">
+                        <h2 class="section-title text-center mb-5">Por que escolher o Fiapfy?</h2>
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <div class="feature-card bg-body-secondary rounded-3 p-4 text-center h-100">
+                                    <div class="feature-icon mb-3">
+                                        <i class="bi bi-music-note-list"></i>
+                                    </div>
+                                    <h3 class="h5 text-white mb-3 fw-bold">Milhões de músicas</h3>
+                                    <p class="text-white-50 mb-0">
+                                        Acesso ilimitado a um catálogo enorme de músicas de todos os gêneros
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="feature-card bg-body-secondary rounded-3 p-4 text-center h-100">
+                                    <div class="feature-icon mb-3">
+                                        <i class="bi bi-collection-play"></i>
+                                    </div>
+                                    <h3 class="h5 text-white mb-3 fw-bold">Playlists personalizadas</h3>
+                                    <p class="text-white-50 mb-0">
+                                        Crie e compartilhe suas próprias playlists com amigos
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="feature-card bg-body-secondary rounded-3 p-4 text-center h-100">
+                                    <div class="feature-icon mb-3">
+                                        <i class="bi bi-phone"></i>
+                                    </div>
+                                    <h3 class="h5 text-white mb-3 fw-bold">Ouça em qualquer lugar</h3>
+                                    <p class="text-white-50 mb-0">
+                                        Disponível em todos os seus dispositivos favoritos
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </NotAuthorized>
+            </AuthorizeView>
+
+            <!-- Top Artistas -->
+            <section class="mb-5">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="section-title">Artistas populares</h2>
+                    <a href="#" class="section-link">Ver todos</a>
+                </div>
+                <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-6 g-4">
+                    @foreach (var artista in artistasPopulares)
+                    {
+                        <div class="col">
+                            <div class="artist-card bg-body-secondary rounded-3 p-3 text-center h-100">
+                                <div class="artist-image mb-3 position-relative">
+                                    <img src="@artista.ImageUrl" alt="@artista.Nome" class="w-100 rounded-circle shadow" />
+                                    <div class="play-button position-absolute bottom-0 end-0 m-2 opacity-0">
+                                        <button class="btn btn-success rounded-circle shadow">
+                                            <i class="bi bi-play-fill"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <h3 class="h6 text-white fw-semibold mb-1 text-truncate">@artista.Nome</h3>
+                                <p class="small text-white-50 mb-0">Artista</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <!-- Playlists em Destaque -->
+            <section class="mb-5">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="section-title">Playlists em destaque</h2>
+                    <a href="#" class="section-link">Ver todas</a>
+                </div>
+                <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-6 g-4">
+                    @foreach (var playlist in playlistsDestaque)
+                    {
+                        <div class="col">
+                            <div class="playlist-card bg-body-secondary rounded-3 p-3 h-100">
+                                <div class="playlist-cover mb-3 position-relative">
+                                    <img src="@playlist.ImageUrl" alt="@playlist.Nome" class="w-100 rounded-2 shadow" />
+                                    <div class="play-button position-absolute bottom-0 end-0 m-2 opacity-0">
+                                        <button class="btn btn-success rounded-circle shadow">
+                                            <i class="bi bi-play-fill"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <h3 class="h6 text-white fw-semibold mb-2 text-truncate">@playlist.Nome</h3>
+                                <p class="small text-white-50 mb-0 playlist-description">@playlist.Descricao</p>
+                            </div>
+                        </div>
+                    }
+                    
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
